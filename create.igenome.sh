@@ -91,8 +91,15 @@ echo "Using file Annotation/Genes/ChromInfo.txt, as base to order"
 echo "chromosomes.  Chromosomes sorted as 1:19, MT, X, Y"
 cd $IGENOME/Sequence/Chromosomes
 
-echo "cleaning /WholeGenomeFasta/"
-if [ -f $(find $IGENOME/Sequence/WholeGenomeFasta/genome*) ]; then rm $IGENOME/Sequence/WholeGenomeFasta/*; fi
+echo "Cleaning ../WholeGenomeFasta/"
+if [ -f $(find $IGENOME/Sequence/WholeGenomeFasta/genome.dict) ]
+    then rm $IGENOME/Sequence/WholeGenomeFasta/genome.fa
+    then rm $IGENOME/Sequence/WholeGenomeFasta/genome.fa.fai
+    then rm $IGENOME/Sequence/WholeGenomeFasta/genome.dict
+    else " No documents found in ../WholeGenomeFasta/, continuing"
+fi
+
+echo " Creating Reference Genome for release $REF"
 for gz in $(cut -f 1 $IGENOME/Annotation/Genes/ChromInfo.txt)
 do
     echo "Appending chromsome : " $gz
