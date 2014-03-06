@@ -12,4 +12,4 @@ Software set up should be generic, though check to make sure you are downloading
   located and that you're not deleting something important.
 
 Analysis pipelines will most likely need to be adapted to your own style and 
-  data structure. Though... take the ideas and best of luck !
+  data structure. Though... take the ideas and best of luck with your work !
