@@ -155,11 +155,11 @@ if [ -e $HOME/bin/bowtie-build ]
 then 
     cd $IGENOME/Sequence/BowtieIndex
     cp -rs $IGENOME/Sequence/WholeGenomeFasta/genome.fa ./genome.fa
-    bowtie-build -f genome.fa ./
+    bowtie-build -f genome.fa genome
 else echo "Bowtie v1 not found, moving on"
 fi
 
 echo "# == Generating Bowtie2 indexes === #"
 cd  cd $IGENOME/Sequence/Bowtie2Index
 cp -rs $IGENOME/Sequence/WholeGenomeFasta/genome.fa ./genome.fa
-bowtie2-build -f genome.fa ./
+bowtie2-build -f genome.fa genome
