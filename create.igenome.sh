@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+
 # copy directory structure from an existing iGenome.
 # start at the distribution level, such that, the directory
 # contains made contains the three standard directories 
@@ -39,7 +40,7 @@ cd $IGENOME/Sequence/Chromosomes
 rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/fasta/mus_musculus/dna/*dna.chromosome.*gz .
 
 ## check if file exists and remove
-if [ -f ChromInfo ]
+if [ -e ChromInfo ]
     then rm ChromInfo
 fi
 
@@ -52,11 +53,18 @@ sort -V ChromInfo > $IGENOME/Annotation/Genes/ChromInfo.txt
 rm ChromInfo
 
 cd $IGENOME/Sequence/AbundantSequences
-echo "  Not sure what goes in $IGENOME/Sequence/AbundantSequences."
-echo "  However, please take a look at your favorite iGenome"
-echo "  and download the necesary *.fa files.  You may donwload"
-echo "  the sepecific sequences by searching for the GI numbers"
-echo "  in NCBI or ensembl."
+echo "Not sure what goes in $IGENOME/Sequence/AbundantSequences." > README
+echo "However, please take a look at your favorite iGenome" >> README
+echo "and download the necesary *.fa files.  You may donwload" >> README
+echo "the sepecific sequences by searching for the GI numbers" >> README
+echo "in NCBI or ensembl." >> README
+echo "This file should contain : " >> README
+echo "Sequence in FASTA format of mitochondrial genome 'MT.fa'" >> README
+echo "Sequence in FASTA format from Adapters, names 'adapter_contam1.fa'">> README
+echo "Sequence in FASTA format from Mus musculus Ribosomal RNA gi:38176281 ; BK000964.x">> README
+echo "Sequence in FASTA format of Enterobacteria phage phiX174 gi:9626372; NC_001422.x">> README
+echo "Sequence in FASTA format of Poly A (A repeat 100mer)">> README
+echo "Sequence in FASTA format of Poly C (C repeat 99mer)">> README
 #cp $CURRIG/Sequence/AbundantSequences/* .
 
 echo "Downloading annotation files to Annotation/Genes from Ensembl"
@@ -66,8 +74,19 @@ rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/gtf/mus_musculus/* .
 echo "Extracting to ${REF}.genes.gtf"
 zcat  Mus_musculus.GRCm38.75.gtf.gz | sort -V > ${REF}.genes.gtf
 
+## Download refseq from UCSC (ensGene.txt.gz and .sql) 
+## Remove leading 'chr' on the chromosome number, and sort by chr and bp
+rsync -avz rsync://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/ensGene* .
+zcat ensGene.txt.gz | sed -e 's/chr//g' | sort -k3V -k4n > ensGene.txt
+
+
 ## need to create ref flat
-## need to create or download refseq
+if [ -e ~/bin/gtfToGenePred ]
+	then gtfToGenePred ${REF}.genes.gtf ${REF}.refFlat.txt
+	else echo "gtfToPred not found. Please download it using : "
+		 echo "wget -nH -O $HOME/bin/ http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/gtfToGenePred"
+		 exit 1;
+fi
 
 echo "Downloading Small RNA and Non-Coding RNA data from :"
 echo "Ensembl : ftp.ensembl.org/pub/release-75/fasta/mus_musculus/ncrna/"
@@ -92,7 +111,7 @@ echo "chromosomes.  Chromosomes sorted as 1:19, MT, X, Y"
 cd $IGENOME/Sequence/Chromosomes
 
 echo "Cleaning ../WholeGenomeFasta/"
-if [ -f $(find $IGENOME/Sequence/WholeGenomeFasta/genome.dict) ]
+if [ -e $(find $IGENOME/Sequence/WholeGenomeFasta/genome.dict) ]
     then rm $IGENOME/Sequence/WholeGenomeFasta/genome.fa
     then rm $IGENOME/Sequence/WholeGenomeFasta/genome.fa.fai
     then rm $IGENOME/Sequence/WholeGenomeFasta/genome.dict
@@ -112,9 +131,9 @@ samtools faidx genome.fa
 
 echo "# == Generating sequence ditionary === #"
 
-if [ -f $(find ~/ -name CreateSequenceDictionary.jar) ]
+if [ -e $(find ~/ -name CreateSequenceDictionary.jar) ]
     then CSD=$(find ~/ -name CreateSequenceDictionary.jar)
-         if [ -f genome.dict ]; then rm genome.dict; fi
+         if [ -e genome.dict ]; then rm genome.dict; fi
          java -jar $CSD R=genome.fa O=genome.dict
     else echo "picard-tools CreateSequenceDictionary.jar not found"
          exit 1
@@ -132,7 +151,7 @@ cp -rs $IGENOME/Sequence/WholeGenomeFasta/genome.fa ./genome.fa
 bwa index genome.fa
 
 echo "# == Generating Bowtie indexes === #"
-if [ -x $HOME/bin/bowtie-build ]
+if [ -e $HOME/bin/bowtie-build ]
 then 
     cd $IGENOME/Sequence/BowtieIndex
     cp -rs $IGENOME/Sequence/WholeGenomeFasta/genome.fa ./genome.fa
@@ -144,4 +163,3 @@ echo "# == Generating Bowtie2 indexes === #"
 cd  cd $IGENOME/Sequence/Bowtie2Index
 cp -rs $IGENOME/Sequence/WholeGenomeFasta/genome.fa ./genome.fa
 bowtie2-build -f genome.fa ./
-
