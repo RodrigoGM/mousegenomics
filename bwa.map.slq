@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=BWA_map
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="BWAmap-%j.out"
+
+#  By default both standard output and  standard  error are 
+# directed to a file of the name "slurm-%j.out", where the "%j" 
+# is replaced with the job allocation number.   The filename 
+# pattern may contain one or more replacement symbols, which are 
+# a percent sign "%" followed by a letter (e.g. %j).
+# Supported replacement symbols are:
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=20:00:00
+# Acceptable time formats include "minutes", "minutes:seconds", 
+# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
+# and "days-hours:minutes:seconds"
+# ** Note that the lower the requested run-time, the higher the
+#    chances to get scheduled to 'fill in the gaps' between other
+#    jobs. 
+
+# ---- Resources ----
+#SBATCH  --ntasks-per-node=10 --mem-per-cpu=2G
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+# ---  SBATCH --array=0-4:1 ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+
+source ~/.bashrc
+
+## path to genome assembly mm9 or mm10
+source ../envar.sh
+
+echo "ARRAY JOB :: ${SLURM_ARRAY_TASK_ID}"
+
+FLOW=`echo $1 | awk '{n = split($0, arra, "/"); print arra[n-1]}'`
+echo "FLOW :: ${FLOW}"
+
+## make a list of all your fastq.gz files in one 
+## create array
+
+R1=(`ls $1*R1*`)
+R2=(`ls $1*R2*`)
+
+#echo ${R1[@]}
+
+
+MID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[1]}'`
+LIBRARY=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n =split($0, arra, "/"); split(arra[n], brra, "_"); print brra[2]}'`
+LANE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} |  awk '{split($1,BARR,"_"); for (x in BARR) if (index(BARR[x],"L0") == 1){ print BARR[x]};}'`
+
+echo "SAMPLE :: ${MID} :: ${LIBRARY}"
+RG="@RG\tID:${MID}_${FLOW}_${LANE}\tPL:ILLUMINA\tPU:${FLOW}\tSM:${MID}\tLB:${LIBRARY}"
+echo "BAM HEADER :: ${RG}"
+
+
+echo "FILE ANALYZED :: "${R1[$SLURM_ARRAY_TASK_ID]}
+
+echo "## ============= Mapping ============= ##"
+bwa mem -aM -t $SLURM_JOB_CPUS_PER_NODE -R ${RG} $BWA ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]} | samtools view -bS - > ${MID}_${FLOW}.bam
+
+echo "## ============= sorting bam file ============= ##"
+samtools sort -@ $SLURM_JOB_CPUS_PER_NODE -m 1900M ${MID}_${FLOW}.bam ${MID}_${FLOW}.sort
+
+###echo Starting Dedup
+java -jar ~/programs/picard-tools-1.107/MarkDuplicates.jar I=${MID}_${FLOW}.sort.bam O=${MID}_${FLOW}.dd.bam M=${MID}_${FLOW}.DupReads
+
+###echo Indexing
+samtools index ${MID}_${FLOW}.dd.bam
+
+## estimating genome coverage
+bedtools genomecov -ibam -d ./${MID}_${FLOW}.dd.bam
+
+## Running piard multiple metrics
+java -jar ~/programs/picard-tools-1.107/CollectMultipleMetrics.jar \
+    I=${MID}_${FLOW}.dd.bam O=metrics/${MID}.pmm.txt
+
+java -jar ~/programs/picard-tools-1.107/CollectAlignmentSummaryMetrics.jar \
+    R=${MM10} I=${MID}_${FLOW}.dd.bam O=metrics/${MID}.pasm.txt
+
+java -jar ~/programs/picard-tools-1.107/CollectGcBiasMetrics.jar \
+    R=${MM10} I=${MID}_${FLOW}.dd.bam O=metrics/${MID}.pgcb.txt CHART=metrics/${MID}.pdf
+
+
+# You will need to merge the individual BAM files together before processing with GATK.                                                                  
+

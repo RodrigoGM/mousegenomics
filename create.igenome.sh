@@ -16,8 +16,9 @@ echo " # ====   THIS SCRIPT IS SPECIFIC FOR MOUSE GRCm38  ==== # "
 ## IGENOME = path to the location of where you want the iGenome
 ##    to be built
 REF=Grcm38
+MMU=$HOME/mmu
 CURRIG=/globalfs/rgularte/mus_musculus/Ensembl/NCBIM37
-IGENOME=/globalfs/rgularte/mus_musculus/Ensembl/$REF
+IGENOME=${MMU}/${REF}
 
 ## this chunk of code copies directory structure from an exisitng 
 ## iGenome.  The iGenome uses Archives, and recursively links to 
@@ -49,6 +50,7 @@ for gz in $(ls *gz)
 do  
     zcat $gz | head | grep -e ">"  | cut -d : -f 4,6 | sed 's/:/\t/' >> ChromInfo
 done
+## for a mac the -V option is not present. Edit in text wrangler
 sort -V ChromInfo > $IGENOME/Annotation/Genes/ChromInfo.txt
 rm ChromInfo
 
@@ -72,6 +74,7 @@ echo "ftp.ensembl.org/ensembl/pub/release-75/gtf/mus_musculus/"
 cd $IGENOME/Annotation/Genes
 rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/gtf/mus_musculus/* .
 echo "Extracting to ${REF}.genes.gtf"
+## again, does `sort -V` does not work on the mac. copy from linyx
 zcat  Mus_musculus.GRCm38.75.gtf.gz | sort -V > ${REF}.genes.gtf
 
 ## Download refseq from UCSC (ensGene.txt.gz and .sql) 

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=CUFF_ALS
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=END,FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="cuffals-%j.out"
+
+#  By default both standard output and  standard  error are 
+# directed to a file of the name "slurm-%j.out", where the "%j" 
+# is replaced with the job allocation number.   The filename 
+# pattern may contain one or more replacement symbols, which are 
+# a percent sign "%" followed by a letter (e.g. %j).
+# Supported replacement symbols are:
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+###SBATCH --time=15-0
+# Acceptable time formats include "minutes", "minutes:seconds", 
+# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
+# and "days-hours:minutes:seconds"
+# ** Note that the lower the requested run-time, the higher the
+#    chances to get scheduled to 'fill in the gaps' between other
+#    jobs. 
+
+## ---- Resources ----
+#SBATCH --nodes=1 --ntasks-per-node=10 --mem-per-cpu=2G
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+# --array=0-9:1   ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+
+## Kill script if any commands fail
+set -e
+
+##source ~/.bashrc
+
+## path to genome assembly and annotation files
+MM10=$GLOBALSCRATCH/mus_musculus/Ensembl/NCBIM37/Sequence/WholeGenomeFasta/genome.fa
+MMUS=$GLOBALSCRATCH/mus_musculus/Ensembl/NCBIM37/Sequence/Chromosomes/
+BWT2=$GLOBALSCRATCH/mus_musculus/Ensembl/NCBIM37/Sequence/Bowtie2Index/genome
+GTF=$GLOBALSCRATCH/mus_musculus/Ensembl/NCBIM37/Annotation/Genes/genes.gtf 
+TISSUE=$1
+LIBTYPE=$2
+
+
+## Analysis of differential expression using cufflinks
+## data
+B6A15=15BC1_pit-A_${LIBTYPE}/accepted_hits.bam,15BC1_pit-B_${LIBTYPE}/accepted_hits.bam
+B6A17=17BC1_pit-C_${LIBTYPE}/accepted_hits.bam,17BC1_pit-D_${LIBTYPE}/accepted_hits.bam
+B6A19=19BC1_pit-E_${LIBTYPE}/accepted_hits.bam,19BC1_pit-F_${LIBTYPE}/accepted_hits.bam
+B6AX=XF1_pit-G_${LIBTYPE}/accepted_hits.bam,XF1_pit-H_${LIBTYPE}/accepted_hits.bam
+B6C=ctrl_pit-I_${LIBTYPE}/accepted_hits.bam,ctrl_pit-J_${LIBTYPE}/accepted_hits.bam
+
+SAMPLES="$B6A15 $B6A17 $B6A19 $B6AX $B6C"
+
+CDOUT=${TISSUE}_DE_${LIBTYPE}
+
+if [ -f ${CDOUT} ]; then echo "output may overwrite previous results in directory : ${CDOUT}"; else mkdir ${CDOUT} && echo "directory created : ${CDOOUT} "; fi
+
+ls *pit-*${LIBTYPE}/transcripts.gtf > transcripts_${LIBTYPE}.list
+
+cuffmerge -o $CDOUT -g $GTF -s $MM10 -p $SLURM_JOB_CPUS_PER_NODE transcripts_${LIBTYPE}.list
+
+cuffdiff -o ${CDOUT} --frag-bias-correct $MM10 -p $SLURM_JOB_CPUS_PER_NODE --labels B6A15,B6A17,B6A19,B6AX,B6C --library-type ${LIBTYPE} --multi-read-correct ${CDOUT}/merged.gtf ${SAMPLES}
