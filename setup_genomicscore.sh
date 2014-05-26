@@ -87,7 +87,7 @@ rm tophat2.tar.gz
 
 
 echo "downloading cufflinks"
-wget -O cufflinks.tar.gz http://cufflinks.cbcb.umd.edu/downloads/cufflinks-2.1.1.Linux_x86_64.tar.gz
+wget -O cufflinks.tar.gz http://cufflinks.cbcb.umd.edu/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
 tar xvf cufflinks.tar.gz
 rm cufflinks.tar.gz
 
