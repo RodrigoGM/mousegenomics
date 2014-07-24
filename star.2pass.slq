@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=STAR_2Pass
+
+#  -- email preferences --
+##SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+##SBATCH --mail-type=BEGIN
+##SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="Star-%j.out"
+
+#  By default both standard output and  standard  error are 
+# directed to a file of the name "slurm-%j.out", where the "%j" 
+# is replaced with the job allocation number.   The filename 
+# pattern may contain one or more replacement symbols, which are 
+# a percent sign "%" followed by a letter (e.g. %j).
+# Supported replacement symbols are:
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+
+# -- time requierements --
+#SBATCH --time=36:00:00
+# Acceptable time formats include "minutes", "minutes:seconds", 
+# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
+# and "days-hours:minutes:seconds"
+# ** Note that the lower the requested run-time, the higher the
+#    chances to get scheduled to 'fill in the gaps' between other
+#    jobs. 
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=8 --mem-per-cpu=4000
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+##SBATCH --array=0-19   ## add at comand line
+
+
+# -----------------------[SLURM : END]---------------------------
+## Require arugment of Fastq folder to continue
+[[ $# -gt 0 ]] || {
+echo "sbatch --array=0-<NumLib> star.map.slq /path/to/fastq/ /path/to/output/"
+echo "This script expects the directory name and output directory as first,"
+echo " and second arguments, respectively"
+echo "Fastq files are standard from Illumina <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
+echo "and that the fastq for R1/R2 are in the same directory. "
+  exit 1; }
+
+## Kill script if any commands fail
+set -e
+
+source ../envar.sh
+
+## make a list of all your fastq.gz files in one 
+## create array of sequences 
+
+R1=(`ls $1*R1*`)
+R2=(`ls $1*R2*`)
+
+
+## echo "EXPERIMENT FILES :: ${R1[@]}"
+
+## sample id  management 
+NAME=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[1]}'`
+STRAIN=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[2]}'`
+POOL=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[3]}'`
+TISSUE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[3];}' | awk '{n = split($0, arra, "-"); print arra[1];}'`
+LANE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{split($1,BARR,"_"); for (x in BARR) if (index(BARR[x],"L0") == 1){ print BARR[x]};}'`
+
+## provide output directory
+OUTDIR=${2}${STRAIN}_${POOL}_${LANE}/2pass
+
+echo " # ======== RUN INFORMATION ======== # "
+
+echo "RUN FOR FILES     ::   ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]}"
+echo "SAMPLE            ::   ${NAME} ${STRAIN} ${POOL}"
+echo "ARRAY             ::   $SLURM_ARRAY_TASK_ID"
+echo "SAVING RESULTS TO ::   ${OUTDIR}"
+
+echo " # ====== PROCESS START  ====== # "
+
+if [ ! -d $OUTDIR ]
+then echo "$OUTDIR does not exist"
+     echo "DON'T PANIC!! creating it now"
+    mkdir -p $OUTDIR
+else
+    echo "$OUTDIR exists"
+fi
+
+echo "START STAR     ::  " `date`
+echo "Running STAR for the first time"
+
+STAR --genomeDir $STAR2PG --readFilesCommand zcat \
+    --readFilesIn ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]} \
+    --runThreadN $SLURM_JOB_CPUS_PER_NODE \
+    --outSAMstrandField intronMotif \
+    --outSAMattrRGline ID:${NAME} SM:${STRAIN}_${NAME}_${POOL} LB:${LIBTYPE} CN:"GIGA-Genomics" DS:`echo $2 | awk '{n=split($0, arra, "/"); print arra[1]}'` PL:Illumina PU:${LANE} PG:STAR_2Pass \
+    --outReadsUnmapped Fastq \
+    --outFileNamePrefix ${OUTDIR}/ 
+
+#
+
+echo "END STAR       ::  " `date`
+echo "START htseq-qa   : " `date`
+
+htseq-qa -o ${OUTDIR}/qa.htseq.pdf ${OUTDIR}/Aligned.out.sam
+
+echo "END htseq-qa         : " `date`
+echo "START bam conversion : " `date`
+
+samtools view -bS -@ $SLURM_JOB_CPUS_PER_NODE ${OUTDIR}/Aligned.out.sam | samtools sort -@ $SLURM_JOB_CPUS_PER_NODE - ${OUTDIR}/Aligned.out.sort
+rm ${OUTDIR}/Aligned.out.sam
+
+echo "END bam conversion   : " `date`
+echo "START SORTING        : " `date`
+
+samtools sort -n -@ $SLURM_JOB_CPUS_PER_NODE ${OUTDIR}/Aligned.out.sort.bam ${OUTDIR}/Aligned.out.nsort
+
+echo "END SORTING          : " `date`
+echo " # === submitting index, transcript assembly, and counting === # "
+
+##                       $1          
+sbatch star.htseq.slq ${OUTDIR}
+sbatch star.cuffX.slq ${OUTDIR} 
+
+## star.htseq.slq is a script which takes Aligned.out.nsort.bam and counts the gene reads
+##  with htseq-count. The separate script has the advantage to change resource allocation
+##  to that job.  OUTDIR is passed. All other variables are contained in ../envar.sh
+## star.cuffX.slq is a script that takes Alinged.out.sort.bam and first runs cufflinks to
+##  assembl transcripts, and then runs cuffquant to count the gene reads. It additionally
+##  indexes the file, but this was removed from the filename
+
+echo " # ====== POCESS END ====== # "
+
+
