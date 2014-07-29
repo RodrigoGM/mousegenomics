@@ -45,7 +45,7 @@
 ## Require arugment of Fastq folder to continue
 ## Kill script if any commands fail
 #set -e
-source ../envar.sh
+source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
 
 # inherits OUTDIR
 OUTDIR=$1

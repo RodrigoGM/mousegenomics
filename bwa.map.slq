@@ -43,7 +43,7 @@
 source ~/.bashrc
 
 ## path to genome assembly mm9 or mm10
-source ../envar.sh
+source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
 
 echo "ARRAY JOB :: ${SLURM_ARRAY_TASK_ID}"
 

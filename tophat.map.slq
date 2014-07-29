@@ -60,7 +60,7 @@ echo "fr-unstranded, fr-firststrand, fr-secondstrand"
 ## Kill script if any commands fail
 set -e
 
-source ../envar.sh
+source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
 
 ## make a list of all your fastq.gz files in one 
 ## create array of sequences 
