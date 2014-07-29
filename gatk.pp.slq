@@ -12,22 +12,13 @@
 
 # -- output prefex
 #SBATCH --output="pp-%j.out"
-
-#  By default both standard output and  standard  error are 
-# directed to a file of the name "slurm-%j.out", where the "%j" 
-# is replaced with the job allocation number.   The filename 
-# pattern may contain one or more replacement symbols, which are 
-# a percent sign "%" followed by a letter (e.g. %j).
-# Supported replacement symbols are:
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
 
 # -- time requierements --
-###SBATCH --time=15-0
-# Acceptable time formats include "minutes", "minutes:seconds", 
-# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
-# and "days-hours:minutes:seconds"
+#SBATCH --time=15-00:00:00
+# "days-hours:minutes:seconds"
 # ** Note that the lower the requested run-time, the higher the
 #    chances to get scheduled to 'fill in the gaps' between other
 #    jobs. 

@@ -12,24 +12,12 @@
 
 # -- output prefex
 #SBATCH --output="BWAmap-%j.out"
-
-#  By default both standard output and  standard  error are 
-# directed to a file of the name "slurm-%j.out", where the "%j" 
-# is replaced with the job allocation number.   The filename 
-# pattern may contain one or more replacement symbols, which are 
-# a percent sign "%" followed by a letter (e.g. %j).
-# Supported replacement symbols are:
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
 # -- time requierements --
 #SBATCH --time=20:00:00
-# Acceptable time formats include "minutes", "minutes:seconds", 
-# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
 # and "days-hours:minutes:seconds"
-# ** Note that the lower the requested run-time, the higher the
-#    chances to get scheduled to 'fill in the gaps' between other
-#    jobs. 
 
 # ---- Resources ----
 #SBATCH  --ntasks-per-node=10 --mem-per-cpu=2G
@@ -51,12 +39,10 @@ FLOW=`echo $1 | awk '{n = split($0, arra, "/"); print arra[n-1]}'`
 echo "FLOW :: ${FLOW}"
 
 ## make a list of all your fastq.gz files in one 
-## create array
-
+## create array with fastq sequences in a /path/to/fastq/
 R1=(`ls $1*R1*`)
 R2=(`ls $1*R2*`)
 
-#echo ${R1[@]}
 
 
 MID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[1]}'`

@@ -53,17 +53,13 @@ echo "and that the fastq for R1/R2 are in the same directory. "
 
 ## Kill script if any commands fail
 set -e
-
 source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
 
 ## make a list of all your fastq.gz files in one 
 ## create array of sequences 
-
 R1=(`ls $1*R1*`)
 R2=(`ls $1*R2*`)
 
-
-## echo "EXPERIMENT FILES :: ${R1[@]}"
 
 ## sample id  management 
 NAME=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[1]}'`

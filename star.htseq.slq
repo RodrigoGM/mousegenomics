@@ -10,35 +10,22 @@
 
 # -- output prefex
 #SBATCH --output="HTCount-%j.out"
-
-#  By default both standard output and  standard  error are 
-# directed to a file of the name "slurm-%j.out", where the "%j" 
-# is replaced with the job allocation number.   The filename 
-# pattern may contain one or more replacement symbols, which are 
-# a percent sign "%" followed by a letter (e.g. %j).
-# Supported replacement symbols are:
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
 
 # -- time requierements --
 #SBATCH --time=06:30:00
-# Acceptable time formats include "minutes", "minutes:seconds", 
-# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
-# and "days-hours:minutes:seconds"
-# ** Note that the lower the requested run-time, the higher the
-#    chances to get scheduled to 'fill in the gaps' between other
-#    jobs. 
+# "days-hours:minutes:seconds"
 
 # ---- Resources ----
 #SBATCH --ntasks-per-node=1 --mem-per-cpu=2000
 
 # ---- Array Control ----  
 # -- format: 0-7:1 0 through 7 by one
-#
-
 
 # -----------------------[SLURM : END]---------------------------
+
 ## Require arugment of Fastq folder to continue
 ## Kill script if any commands fail
 #set -e
@@ -62,18 +49,6 @@ echo "--lib-type passed is    : " $LIBTYPE
 
 echo " # ====== PROCESS START  ====== # "
 
-echo "START RNASeq Metrics: " `date`
-
-# echo RNA metrics w/ picard
-#java -Xmx2G -jar ~/programs/picard-tools/CollectRnaSeqMetrics.jar \
-#    REF_FLAT=${REFFLAT} \
-#    STRAND=FIRST_READ_TRANSCRIPTION_STRAND \
-#    CHART_OUTPUT=${OUTDIR}/star.coverage.pdf \
-#    INPUT=${OUTDIR}/Aligned.out.sort.bam \
-#    OUTPUT=${OUTDIR}/rnastar.metrix.txt \
-#    REFERENCE_SEQUENCE=${MM10}
-
-echo "END RNASEQ Metrics :   " `date`
 echo "START htseq-count :    " `date`
 
 samtools view ${OUTDIR}/Aligned.out.nsort.bam | htseq-count -m intersection-strict -s 'reverse' - ${GTF} > ${OUTDIR}/star.gene.htseq.txt
@@ -82,3 +57,14 @@ echo "END htseq-count    :   " `date`
 
 
 echo " # ====== POCESS END ====== # "
+
+## can't get picard's CollectRnaMetrix.jar to work properly
+#echo "START RNASeq Metrics: " `date`
+#java -Xmx2G -jar ~/programs/picard-tools/CollectRnaSeqMetrics.jar \
+#    REF_FLAT=${REFFLAT} \
+#    STRAND=FIRST_READ_TRANSCRIPTION_STRAND \
+#    CHART_OUTPUT=${OUTDIR}/star.coverage.pdf \
+#    INPUT=${OUTDIR}/Aligned.out.sort.bam \
+#    OUTPUT=${OUTDIR}/rnastar.metrix.txt \
+#    REFERENCE_SEQUENCE=${MM10}
+#echo "END RNASEQ Metrics :   " `date`

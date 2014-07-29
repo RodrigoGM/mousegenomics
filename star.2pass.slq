@@ -5,33 +5,18 @@
 #SBATCH --job-name=STAR_2Pass
 
 #  -- email preferences --
-##SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
-##SBATCH --mail-type=BEGIN
-##SBATCH --mail-type=END
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
 #SBATCH --mail-type=FAIL
 #     (ALL = BEGIN, END, FAIL, REQUEUE)
 
 # -- output prefex
 #SBATCH --output="Star-%j.out"
-
-#  By default both standard output and  standard  error are 
-# directed to a file of the name "slurm-%j.out", where the "%j" 
-# is replaced with the job allocation number.   The filename 
-# pattern may contain one or more replacement symbols, which are 
-# a percent sign "%" followed by a letter (e.g. %j).
-# Supported replacement symbols are:
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
-
 # -- time requierements --
 #SBATCH --time=36:00:00
-# Acceptable time formats include "minutes", "minutes:seconds", 
-# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
-# and "days-hours:minutes:seconds"
-# ** Note that the lower the requested run-time, the higher the
-#    chances to get scheduled to 'fill in the gaps' between other
-#    jobs. 
+# "days-hours:minutes:seconds"
 
 # ---- Resources ----
 #SBATCH --ntasks-per-node=8 --mem-per-cpu=4000
@@ -52,18 +37,14 @@ echo "and that the fastq for R1/R2 are in the same directory. "
   exit 1; }
 
 ## Kill script if any commands fail
+## source in envar.sh with all the paths to the Grcm38/
 set -e
-
 source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
 
 ## make a list of all your fastq.gz files in one 
 ## create array of sequences 
-
 R1=(`ls $1*R1*`)
 R2=(`ls $1*R2*`)
-
-
-## echo "EXPERIMENT FILES :: ${R1[@]}"
 
 ## sample id  management 
 NAME=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[1]}'`
@@ -103,7 +84,11 @@ STAR --genomeDir $STAR2PG --readFilesCommand zcat \
     --outReadsUnmapped Fastq \
     --outFileNamePrefix ${OUTDIR}/ 
 
-#
+#  This stage runs : a quality assesment with htseq-qa on the sam file.
+#   Once complete, it converts the .sam to a .bam and removes the .sam
+#   Then we sort by name, as required by htseq-count.  Lastly, we
+#   submit both cufflinks pipeline and htseq-count pipelines for transcript
+#   counting and annotation by each of them.
 
 echo "END STAR       ::  " `date`
 echo "START htseq-qa   : " `date`

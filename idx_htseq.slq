@@ -6,48 +6,30 @@
 
 #  -- email preferences --
 #SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #     (ALL = BEGIN, END, FAIL, REQUEUE)
 
 # -- output prefex
-#SBATCH --output="count-%j.out"
-##SBATCH --output="ex_count-%j.out"
-
-#  By default both standard output and  standard  error are 
-# directed to a file of the name "slurm-%j.out", where the "%j" 
-# is replaced with the job allocation number.   The filename 
-# pattern may contain one or more replacement symbols, which are 
-# a percent sign "%" followed by a letter (e.g. %j).
-# Supported replacement symbols are:
+#SBATCH --output="IDX+COUNT-%j.out"
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
 
 # -- time requierements --
-#SBATCH --time=06:30:00
-# Acceptable time formats include "minutes", "minutes:seconds", 
-# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
+#SBATCH --time=16:30:00
 # and "days-hours:minutes:seconds"
-# ** Note that the lower the requested run-time, the higher the
-#    chances to get scheduled to 'fill in the gaps' between other
-#    jobs. 
 
 # ---- Resources ----
 #SBATCH --ntasks-per-node=1 --mem-per-cpu=2000
 
 # ---- Array Control ----  
 # -- format: 0-7:1 0 through 7 by one
-#
-
 
 # -----------------------[SLURM : END]---------------------------
 ## Require arugment of Fastq folder to continue
 
-
 ## Kill script if any commands fail
-#set -e
+#set -e  ## use a `#` to deactivate
 
 ## path to genome assembly and annotation files
 MMU=$7
