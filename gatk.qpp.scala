@@ -25,15 +25,15 @@ class IndelRealignmet extends QScript {
   @Argument(doc="scatter parameter", shortName="P", fullName="scatter_parameter", required=false)
   var scatter:  Int = _  
   
-  @Input(doc="Intervals to realign", shortName="L", required = false)
-  var intervals: File = _
-
   @Argument(doc="nt parameter", shortName="N", fullName="num_threads", required=false)
   var nt:  Int = _
   
   @Argument(doc="nct parameter", shortName="C", fullName="num_cpu_threads_per_data_thread", required=false)
   var nct:  Int = _
   
+  @Input(doc="Intervals to realign", shortName="L", required = false)
+  var intervals: File = _
+
   @Input(doc="dbSNP file", shortName="D", fullName="dbsnp", required=false)
   var dbsnp: File = _
 
@@ -60,7 +60,7 @@ class IndelRealignmet extends QScript {
 
 
   /****************************************************************************
-   * Classes (GATK Walkers)
+   * CommonArguments
    *****************************************************************************/
   
   trait CommonArguments extends CommandLineGATK {

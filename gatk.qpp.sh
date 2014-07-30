@@ -1,19 +1,21 @@
 #!/bin/bash
 #SBATCH --time=48:00:00
 
+## kill if anything fails
 set -e
+## ensure consistency of paths, modules, etc...
 source ~/.bashrc
+## load environment variables containing Grcm38 file paths
 source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
+## path/to/GATK
 GATK=~/programs/GATK-latest/
-#list of files
+
+# Input file at the comand line
 input=$1
 
 echo "============== In/Del Realingment + Base Recalibration  =================="
 echo `date`
 # -P = scatter parameter
-#    -glm BOTH \ is forced within UG.scala
-#    -l DEBUG \ is forced within UG.scala
-#    -o $rawVCF \ is hard-encoded within UG.scala
 
 java -Xmx500M -jar ${GATK}/Queue.jar \
     -S q.indel.scala \
@@ -26,14 +28,6 @@ java -Xmx500M -jar ${GATK}/Queue.jar \
     -jobRunner Drmaa \
     -jobNative "--time=48:00:00 --nodes=1 --ntasks-per-node=4 --mem-per-cpu=4000" \
 #    -run -startFromScratch
-
-
-
-##    --filter_bases_not_stored \
-##    -known $SV_NE \
-
-# submitting next job
-#sbatch gatk.brc.slq $GATK $input
 
 echo `date`
 echo "============== Finished =================="
