@@ -40,9 +40,6 @@ class IndelRealignmet extends QScript {
   @Input(doc="Known in/del VCF file", shortName="known", required=false)
   var known: File = _
 
-  @Input(doc="known polymorphic sites that BQSR skips", shortName="knownSites", fullName = "knownSites", required=false)
-  var knownSites: Seq[File] = Nil
-
   @Input(doc="BQSR recalibration table", shortName="BQSR", required=false)
   var BQSR: File = _
 
@@ -94,17 +91,12 @@ class IndelRealignmet extends QScript {
       indelRealigner.out = swapExt(qscript.myBam, "dd.bam", "dd.ir.bam")
 
       bqsr.input_file +:= indelRealigner.out
-      bqsr.knownSites +:= Seq(qscript.knownSites)
+      bqsr.knownSites +:= new File("/scratch/ulg/genan/rgularte/mus_musculus/Ensembl/Grcm38/Annotation/Variation/Mus_musculus.sorted.vcf")
       bqsr.out = swapExt(indelRealigner.out, "dd.ir.bam", "bqrecal")
       targetCreator.nct = qscript.nct
 
-      bqsr.input_file +:= indelRealigner.out
-      bqsr.knownSites +:= Seq(qscript.knownSites)
-      bqsr.out = swapExt(indelRealigner.out, "dd.ir.bam", "bqrecal")
-      bqsr.nct = qscript.nct
-
       bqsr2.input_file +:= indelRealigner.out
-      bqsr2.knownSites +:= Seq(qscript.knownSites)
+      bqsr2.knownSites +:= new File("/scratch/ulg/genan/rgularte/mus_musculus/Ensembl/Grcm38/Annotation/Variation/Mus_musculus.sorted.vcf")
       bqsr2.BQSR +:= bqsr.out
       bqsr2.out = swapExt(bqsr.out, "dd.ir.bam", "bqrecal2")
       bqsr2.nct = qscript.nct

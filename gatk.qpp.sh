@@ -23,7 +23,6 @@ java -Xmx500M -jar ${GATK}/Queue.jar \
     -R $MM10 \
     -I $input \
     -known $INDELVCF \
-    -knownSites $DBSNP \
     -N 2 -C 2 \
     -jobRunner Drmaa \
     -jobNative "--time=48:00:00 --nodes=1 --ntasks-per-node=4 --mem-per-cpu=4000" \
@@ -31,3 +30,4 @@ java -Xmx500M -jar ${GATK}/Queue.jar \
 
 echo `date`
 echo "============== Finished =================="
+##    -KS $DBSNP \
