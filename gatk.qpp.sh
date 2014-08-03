@@ -18,16 +18,19 @@ echo `date`
 # -P = scatter parameter
 
 java -Xmx500M -jar ${GATK}/Queue.jar \
-    -S q.indel.scala \
+    -S gatk.qpp.scala \
     -P 35 \
     -R $MM10 \
     -I $input \
     -known $INDELVCF \
-    -N 2 -C 2 \
+    -N 6 -C 6 \
     -jobRunner Drmaa \
-    -jobNative "--time=48:00:00 --nodes=1 --ntasks-per-node=4 --mem-per-cpu=4000" \
-#    -run -startFromScratch
+    -jobNative "--time=48:00:00 --nodes=1 --ntasks-per-node=6 --mem-per-cpu=4000" \
+    -run 
+
+##    -startFromScratch
 
 echo `date`
 echo "============== Finished =================="
-##    -KS $DBSNP \
+
+
