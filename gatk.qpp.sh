@@ -19,16 +19,14 @@ echo `date`
 
 java -Xmx500M -jar ${GATK}/Queue.jar \
     -S gatk.qpp.scala \
-    -P 35 \
+    -P 5 \
     -R $MM10 \
     -I $input \
     -known $INDELVCF \
     -N 6 -C 6 \
     -jobRunner Drmaa \
-    -jobNative "--time=48:00:00 --nodes=1 --ntasks-per-node=6 --mem-per-cpu=4000" \
-    -run 
-
-##    -startFromScratch
+    -jobNative "--time=12:00:00 --nodes=1 --ntasks-per-node=6 --mem-per-cpu=4000" \
+    -run -startFromScratch
 
 echo `date`
 echo "============== Finished =================="

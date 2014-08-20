@@ -18,17 +18,23 @@ echo "# ============ END Run Information ============ #"
 
 echo "# ============ Queue running HC ============ #"
 
-java -Xmx1G -jar ${GATK}/Queue.jar \
+java -Xmx500M -jar ${GATK}/Queue.jar \
     -S q.hc.scala \
-    -P 64 \
+    -P 20 \
     -R $MM10 \
     -I $input \
-    -gt_mode Discovery --pcr_indel_model CONSERVATIVE \
     -maxAltAlleles 10 \
-    -ERC GVCF \
-    -pairHMM VECTOR_LOGLESS_CACHING \
     --dbsnp $DBSNP \
-    -C 8
+    -jobRunner Drmaa \
+    -jobNative "--time=48:00:00 --nodes=1 --ntasks-per-node=6 --mem-per-cpu=4000" \
+    -C 6 
 
-# -run
-#   --variant_index_type LINEAR --variant_index_parameter 128000 \
+
+##    -run
+
+
+## -startFromScratch
+##    -gt_mode Discovery --pcr_indel_model CONSERVATIVE \
+##    --variant_index_type LINEAR --variant_index_parameter 128000 \
+##    -ERC GVCF \
+##    -pairHMM VECTOR_LOGLESS_CACHING \

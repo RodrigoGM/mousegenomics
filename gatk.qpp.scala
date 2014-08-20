@@ -5,7 +5,7 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk._
 import org.broadinstitute.gatk.queue.function.ListWriterFunction
 
-class FQ2VCF extends QScript {
+class BAM2VCF extends QScript {
   qscript =>
   
   /****************************************************************************
@@ -79,39 +79,51 @@ class FQ2VCF extends QScript {
     val bqsr2 = new BaseRecalibrator with CommonArguments
     val analyzeCovariates = new AnalyzeCovariates with CommonArguments
     val applyRecalibration = new PrintReads with CommonArguments
+    val hc = new HaplotypeCaller with HCArguments
     
     targetCreator.input_file +:= qscript.myBam
-    targetCreator.out = swapExt(myBam, "bam", "intervals")
+    targetCreator.out = swapExt(myBam, ".bam", ".intervals")
     targetCreator.nt = qscript.nt
     targetCreator.known +:= qscript.known
     
     indelRealigner.input_file +:= qscript.myBam
     indelRealigner.targetIntervals = targetCreator.out
-    indelRealigner.out = swapExt(myBam, "dd.bam", "dd.ir.bam")
+    indelRealigner.out = swapExt(myBam, ".dd.bam", ".dd.ir.bam")
     indelRealigner.known +:= qscript.known
     
     bqsr.input_file +:= indelRealigner.out
-    bqsr.out = swapExt(indelRealigner.out, "dd.ir.bam", "bqrecal")
+    bqsr.out = swapExt(indelRealigner.out, ".dd.ir.bam", ".bqrecal")
     bqsr.knownSites +:= new File("/scratch/ulg/genan/rgularte/mus_musculus/Ensembl/Grcm38/Annotation/Variation/Mus_musculus.sorted.vcf") //Seq(qscript.KS)
     bqsr.nct = qscript.nct
     
     bqsr2.input_file +:= indelRealigner.out
-    bqsr2.out = swapExt(bqsr.out, "dd.ir.bam", "bqrecal2")
+    bqsr2.out = swapExt(bqsr.out, ".bqrecal", ".bqrecal2")
     bqsr2.knownSites +:= new File("/scratch/ulg/genan/rgularte/mus_musculus/Ensembl/Grcm38/Annotation/Variation/Mus_musculus.sorted.vcf") //Seq(qscript.KS)
     bqsr2.BQSR = bqsr.out
     bqsr2.nct = qscript.nct
     
     analyzeCovariates.before = bqsr.out
     analyzeCovariates.after = bqsr2.out
-    analyzeCovariates.csv = swapExt(bqsr.out, "dd.ir.bam", "recal.csv")
-    analyzeCovariates.plots = swapExt(bqsr.out, "dd.ir.bam", "bqsr.pdf")
+    analyzeCovariates.csv = swapExt(bqsr.out, ".dd.ir.bam", ".recal.csv")
+    analyzeCovariates.plots = swapExt(bqsr.out, ".dd.ir.bam", ".bqsr.pdf")
     
     applyRecalibration.input_file +:= indelRealigner.out
     applyRecalibration.BQSR = bqsr2.out
-    applyRecalibration.out = swapExt(indelRealigner.out, "dd.ir.bam", "dd.ir.bqsr.bam")
+    applyRecalibration.out = swapExt(indelRealigner.out, ".dd.ir.bam", ".dd.ir.bqsr.bam")
     applyRecalibration.nct = qscript.nct
-    
-    add(targetCreator, indelRealigner, bqsr, bqsr2, analyzeCovariates, applyRecalibration)
+
+    hc.scatterCount = qscript.scatter
+    hc.input_file +:= qscript.myBam
+    hc.nct = qscript.nct
+    hc.pairHMM = org.broadinstitute.gatk.utils.pairhmm.PairHMM.HMM_IMPLEMENTATION.VECTOR_LOGLESS_CACHING
+    hc.pcr_indel_model = org.broadinstitute.gatk.tools.walkers.haplotypecaller.PairHMMLikelihoodCalculationEngine.PCR_ERROR_MODEL.CONSERVATIVE
+//    hc.out = swapExt(qscript.myBam, ".dd.ir.bqsr.bam", ".vcf")
+    hc.out = swapExt(qscript.myBam, ".dd.ir.bqsr.bam", ".g.vcf")
+    hc.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
+    hc.variant_index_type = org.broadinstitute.gatk.utils.variant.GATKVCFIndexType.LINEAR
+    hc.variant_index_parameter = 128000 
+
+    add(targetCreator, indelRealigner, bqsr, bqsr2, analyzeCovariates, applyRecalibration, hc)
     
   }
   
