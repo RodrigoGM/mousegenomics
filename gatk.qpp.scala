@@ -49,13 +49,6 @@ class BAM2VCF extends QScript {
   @Input(doc="Second recalibration table; BQSR with first recalibration table", shortName="after", required=false)
   var after: File = _
 
-  //  @Output(doc = "CSV recalibration table", shortName = "csv", required = false)
-  //  var csv: File = _
-
-  //  @Output(doc = "PDF of BQSR plots", shortName = "plots", required = false)
-  //  var plots: File = _
-
-
   /****************************************************************************
    * CommonArguments
    *****************************************************************************/
@@ -79,7 +72,7 @@ class BAM2VCF extends QScript {
     val bqsr2 = new BaseRecalibrator with CommonArguments
     val analyzeCovariates = new AnalyzeCovariates with CommonArguments
     val applyRecalibration = new PrintReads with CommonArguments
-    val hc = new HaplotypeCaller with HCArguments
+    val hc = new HaplotypeCaller with CommonArguments
 
     targetCreator.input_file +:= qscript.myBam
     targetCreator.out = swapExt(myBam, ".bam", ".intervals")
@@ -128,3 +121,4 @@ class BAM2VCF extends QScript {
   }
 
 }
+

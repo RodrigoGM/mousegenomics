@@ -70,7 +70,6 @@ class HapCaller extends QScript {
     this.reference_sequence = qscript.referenceFile
     this.intervals = if (qscript.intervals == null) Nil else List(qscript.intervals)
     this.memoryLimit = 12
-//    this.variant_index_parameter = 128000
   }
   
     /****************************************************************************               
