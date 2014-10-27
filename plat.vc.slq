@@ -1,0 +1,51 @@
+#!/bin/bash
+# -----------------------[ USAGE ]---------------------------
+# plat.vc.slq : requires input and output files.  
+# The input is a coma separated list of *bam files. We are inputting 
+# the BQSR bam files from GATK.
+# plat.vc.slq plat.input StrainVariants.plat.vcf.gz
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=Plat_VC
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+##SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="PLATVC-%j.out"
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+# and "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --nodes=1 --ntasks-per-node=12 --mem-per-cpu=3000
+
+# ---- Array Control ---- 
+# -- format: 0-7:1 0 through 7 by one
+##SBATCH --array=0-5
+
+# -----------------------[SLURM : END]---------------------------
+set -e
+source ~/.bashrc
+source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
+
+PLAT=~/programs/Platypus_0.7.9.1/
+
+input=$1
+output=$2
+
+echo "# ============ Run Information ============ #"
+
+echo "Input File are    : " ${input}
+echo "Output File is    : " ${output}
+echo "Reference Genome : " $MM10
+echo "SNP db           : " $DBSNP
+echo "IN/DEL db        : " $INDELVCF
+
+echo "# ============ END Run Information ============ #"
+
+python $PLAT/Platypus.py callVariants --refFile=$MM10 --bamFiles=$(cat $input) --source=$SANGERVCF \
+        --nCPU=$SLURM_JOB_CPUS_PER_NODE --minReads=8 --minFlank=5 --output=$output
+	
