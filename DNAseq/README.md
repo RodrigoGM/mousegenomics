@@ -12,7 +12,7 @@ Read mapping and alignment
 ---
 1) BWA
 
-   bwa.map.slq : Mapping of several bam files using BWA.  Requires SLURM 2.7 or greater as it uses --array=<>
+   bwa.map.slq : Mapping of several bam files using BWA.  Requires SLURM 2.7 or greater as it uses ```--array=<>```
 
 
 Variant calling
