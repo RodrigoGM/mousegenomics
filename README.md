@@ -70,7 +70,7 @@ Contains scripts for the analysis of gene expression data.
         │   │   ├── SmallRNA
         │   │   │   └── mature.fa precursor.fa                  ## Fasta files from miRBase
         │   │   └── Variation
-        │   │       └── Mus_musculus.gvf                                ## Genomic variation
+        │   │       └── Mus_musculus.gvf, Mus_musculus.vcf      ## Genomic variation
         │   └── Sequence
         │       ├── AbundantSequences                           ## fasta files
         │       │   └── adapter_contam1.fa* MT.fa* musRibosomal.fa*
