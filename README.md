@@ -57,7 +57,8 @@ Contains scripts for the analysis of gene expression data.
 
 ## Scripts
 
-create.igenome.sh
+##### create.igenome.sh
+
   This script creates an iGenome « LIKE » reference genome.  The iGenomes are Illumina's bundled referece and annotation packages to be used with GenomeStudio.  an iGenome has the following simplified directory tree structure
   
     Mus_musculus/                                                       ## Organisms/species
