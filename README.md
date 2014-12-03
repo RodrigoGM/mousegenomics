@@ -91,3 +91,20 @@ Contains scripts for the analysis of gene expression data.
    
    The directory structured is simplified as in addition to Annotation and Sequence, directories, there is an additional GenomeStudio which contains symbolic to the appropriate locations, and each directory has an Archives or versionXX directory where the data is contained and then sym-linked to the files shown here.  The symbolic link strategy was not reconstructed, however, the essence of the data structure was preserved in this script shuch that it resembles the above.
 The location and additional README files will be downloaded along with the data for reference.
+
+##### envar.sh
+
+Contains a collection of environment variables that are used in many scripts.  
+
+##### setup_bin.sh
+
+This script goes through an src/ directory, finds all executable files and sym-links them to a $HOME/bin.  The script is convinient when working as a user in a High-Performace Computing cluter. It helps to keep all your latest programs in the src/ but still be able to access it withouth specifying the entire path/to/src/dev-src-git-clone/bin/MyAwsomeTool.  Note: $HOME/bin must be in the $PATH.
+
+##### setup_genomicscore.sh
+
+This script downloads the source code of about 14 programs useful for Highthrougput sequencing. After running this script, the setup_bin.sh will generate your $HOME/bin
+
+##### sort.igenome.sh
+
+This script goes through the annotation files and fasta files and performs a version sort ```sort -V```. Genomics tools such as bwa, Tophat, Cufflinks, STAR, SAMtools, vcftools, etc like to have everything in the same order, hence the script.
+
