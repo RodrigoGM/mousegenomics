@@ -30,48 +30,63 @@
 
 source ~/.bashrc
 
-## path to genome assembly mm9 or mm10
-source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
+## Sourcing file called 'envar.sh'
+## This file contains paths to may of the tools and resources
+## used in this and other scripts.  'envar.sh' should be at ../
+## However, in case you move it, we can search for it starting at ../
+source $(find ../ -name 'envar.sh' -type f)
 
+## $SLURM_ARRAY_TASK_ID is a SLURM environment variable that contains the value
+## of the array item we are running.  In this case, any value from 0 to 4.
+## Start your count at 0 in bash
 echo "ARRAY JOB :: ${SLURM_ARRAY_TASK_ID}"
 
+## FLOW, Folder where things are located; I think
 FLOW=`echo $1 | awk '{n = split($0, arra, "/"); print arra[n-1]}'`
 echo "FLOW :: ${FLOW}"
 
 ## make a list of all your fastq.gz files in one 
-## create array with fastq sequences in a /path/to/fastq/
+## $1 is passed when you write thes script.  Here we create array with fastq sequences in a /path/to/fastq/
+## The R1 and R2 should be the same length as the --array=0:5 argument; in this case, /path/to/fasta/*R1* should have
+## six elements
 R1=(`ls $1*R1*`)
 R2=(`ls $1*R2*`)
 
-
-
+## MID = Mouse ID ; ## LIBRARY = library ID or library index ; LANE = Lane on the flow cell
 MID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[1]}'`
 LIBRARY=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n =split($0, arra, "/"); split(arra[n], brra, "_"); print brra[2]}'`
 LANE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} |  awk '{split($1,BARR,"_"); for (x in BARR) if (index(BARR[x],"L0") == 1){ print BARR[x]};}'`
 
+## Sample is the mix between MID and Library
 echo "SAMPLE :: ${MID} :: ${LIBRARY}"
+## Read group header.  This is passed down to BWA.  Google '@RG' and/or BAM read group headers to find out what information you can have here
 RG="@RG\tID:${MID}_${FLOW}_${LANE}\tPL:ILLUMINA\tPU:${FLOW}\tSM:${MID}\tLB:${LIBRARY}"
 echo "BAM HEADER :: ${RG}"
 
-
+## writes the actuale file being analyzed.
 echo "FILE ANALYZED :: "${R1[$SLURM_ARRAY_TASK_ID]}
 
 echo "## ============= Mapping ============= ##"
+## $SLURM_JOB_CPUS_PER_NODE = SLURM environment variables containing the number of CPU requested for the allocation. Output of BWA is piped through `samtoos view -bS` to convert into a bam file
 bwa mem -aM -t $SLURM_JOB_CPUS_PER_NODE -R ${RG} $BWA ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]} | samtools view -bS - > ${MID}_${FLOW}.bam
 
 echo "## ============= sorting bam file ============= ##"
+## BAM is sorted.  Samtools places the *.bam
 samtools sort -@ $SLURM_JOB_CPUS_PER_NODE -m 1900M ${MID}_${FLOW}.bam ${MID}_${FLOW}.sort
 
-###echo Starting Dedup
-java -jar ~/programs/picard-tools-1.107/MarkDuplicates.jar I=${MID}_${FLOW}.sort.bam O=${MID}_${FLOW}.dd.bam M=${MID}_${FLOW}.DupReads
+echo Starting Dedup
+### java -jar ~/programs/picard-tools-1.107/MarkDuplicates.jar I=${MID}_${FLOW}.sort.bam O=${MID}_${FLOW}.dd.bam M=${MID}_${FLOW}.DupReads
+sambamba markdup -t $SLURM_JOB_CPUS_PER_NODE --tmpdir=./tmp/ ${MID}_${FLOW}.sort.bam ${MID}_${FLOW}.dd.bam
 
-###echo Indexing
-samtools index ${MID}_${FLOW}.dd.bam
+echo Indexing
+### samtools index ${MID}_${FLOW}.dd.bam
+sambamba index -t -c ${MID}_${FLOW}.dd.bam
 
 ## estimating genome coverage
 bedtools genomecov -ibam -d ./${MID}_${FLOW}.dd.bam
 
 ## Running piard multiple metrics
+## may or may not work properly...
 java -jar ~/programs/picard-tools-1.107/CollectMultipleMetrics.jar \
     I=${MID}_${FLOW}.dd.bam O=metrics/${MID}.pmm.txt
 
