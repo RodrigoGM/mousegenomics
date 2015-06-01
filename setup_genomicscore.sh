@@ -120,3 +120,15 @@ rm htseq.tar.gz
 cd HTSeq-0.6.1
 python setup.py install --user
 cd ../
+
+echo "downloading FastQC"
+wget -O fastqc.tar.gz http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
+unzip fastqc.tar.gz
+rm fastqc.tar.gz
+
+echo "downloading picard-tools"
+wget -O picard-tools.zip http://sourceforge.net/projects/picard/files/picard-tools/1.119/picard-tools-1.119.zip/download
+unzip picard-tools.zip
+rm picard-tools.zip
+# cd picard-tools-1.119
+
