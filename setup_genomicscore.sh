@@ -25,7 +25,7 @@ if [ -f $HOME/src ]
          echo "Created $HOME/src"
 fi
 
-cd $HOME/programs
+cd $HOME/src
 
 if [ -x `which git` ]
     then echo "git found, continuing"
