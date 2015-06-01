@@ -19,10 +19,10 @@ if [ -f $HOME/bin ]
 fi
 
 
-if [ -f $HOME/programs ]
-    then echo "$HOME/programs present"
-    else mkdir -p $HOME/programs
-         echo "Created $HOME/programs"
+if [ -f $HOME/src ]
+    then echo "$HOME/src present"
+    else mkdir -p $HOME/src
+         echo "Created $HOME/src"
 fi
 
 cd $HOME/programs
@@ -62,32 +62,33 @@ git checkout tags/0.7.7
 cd ../
 
 echo "downloading vcftools"
-wget -O vcftools.tar.gz http://sourceforge.net/projects/vcftools/files/vcftools_0.1.11.tar.gz/download
+# svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
+wget -O vcftools.tar.gz http://sourceforge.net/projects/vcftools/files/vcftools_0.1.12b.tar.gz/download
 tar xvf vcftools.tar.gz
 rm vcftools.tar.gz
-cd vcftools_0.1.11
+cd vcftools_0.1.12b
 make
 cd ../
 
 
-echo "downloading bowtie-1"
-wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
-unzip bowtie.zip
-rm bowtie.zip
+# echo "downloading bowtie-1"
+# wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
+# unzip bowtie.zip
+# rm bowtie.zip
 
 echo "downloading bowtie2"
-wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.1.0/bowtie2-2.1.0-linux-x86_64.zip/download
+wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.5/bowtie2-2.2.5-linux-x86_64.zip/download
 unzip bowtie2.zip
 rm bowtie2.zip
 
 echo "downloading tophat2"
-wget -O tophat2.tar.gz http://tophat.cbcb.umd.edu/downloads/tophat-2.0.10.Linux_x86_64.tar.gz
+wget -O tophat2.tar.gz http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.14.Linux_x86_64.tar.gz
 tar xvf tophat2.tar.gz
 rm tophat2.tar.gz
 
 
 echo "downloading cufflinks"
-wget -O cufflinks.tar.gz http://cufflinks.cbcb.umd.edu/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
+wget -O cufflinks.tar.gz http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
 tar xvf cufflinks.tar.gz
 rm cufflinks.tar.gz
 
