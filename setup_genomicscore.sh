@@ -132,3 +132,22 @@ unzip picard-tools.zip
 rm picard-tools.zip
 # cd picard-tools-1.119
 
+echo "downloading ensembl-tools"
+git clone https://github.com/Ensembl/ensembl-tools.git
+
+echo "downloading freebayes"
+git clone --recursive https://github.com/ekg/freebayes.git
+cd freebayes 
+make
+cd ../
+
+echo "downloading snpEff"
+wget -O snpEff_latest_core.zip http://sourceforge.net/projects/snpeff/files/snpEff_latest_core.zip/download
+unzip snpEff_latest_core.zip
+rm snpEff_latest_core.zip
+
+echo "downloading STAR"
+git clone https://github.com/alexdobin/STAR.git
+cd STAR
+make STAR
+cd ../
