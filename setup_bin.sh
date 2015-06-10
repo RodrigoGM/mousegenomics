@@ -40,3 +40,16 @@ do
     fi
 done
 
+for exec in $(find $HOME/src/* -name "*.jar")
+do 
+    if [ -x $exec ]
+	then cp -rs $exec $HOME/scripts/
+    fi
+done
+
+for exec in $(find $HOME/src/* -name "*.py")
+do 
+    if [ -x $exec ]
+	then cp -rs $exec $HOME/scripts/
+    fi
+done
