@@ -15,7 +15,7 @@ done
 ## perl, shell and python scripts were also removed.
 cd $HOME/bin
 
-rm *.fa *.sample *.bed Makefile *.rst *genome *.sh *.html *.css *.fna *.ebwt AUTH* *README* LICENSE* MANUAL* NEWS* TUTORIAL VERSION *.fq *.raw *.pl md5* test.t *.lua *.py *.so *.conf *.bat *.bt2 *.jar *.cfg *.txt *.svg *.h *.src *.bfc *.png *.pxd *.properties *.out *.c rtd.css_t *~
+rm *.* *~ Makefile AUTH* *README* LICENSE* MANUAL* NEWS* TUTORIAL VERSION GETDISTNAME GETMAKEVAL THANKS
 
 cd ../
 
