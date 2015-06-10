@@ -53,3 +53,18 @@ do
 	then cp -rs $exec $HOME/scripts/
     fi
 done
+
+for exec in $(find $HOME/src/* -name "*.R")
+do
+    if [ -x $exec ]
+        then cp -rs $exec $HOME/scripts/
+    fi
+done
+
+for exec in $(find $HOME/src/* -name "*.r")
+do
+    if [ -x $exec ]
+        then cp -rs $exec $HOME/scripts/
+    fi
+done
+
