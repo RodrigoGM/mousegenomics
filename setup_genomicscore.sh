@@ -18,7 +18,6 @@ if [ -f $HOME/bin ]
          echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
 fi
 
-
 if [ -f $HOME/src ]
     then echo "$HOME/src present"
     else mkdir -p $HOME/src
@@ -32,26 +31,31 @@ if [ -x `which git` ]
     else "'git' not found, please install git to continue http://git-scm.com/downloads "
 fi
 
-echo "downloading htlib"
+echo "downloading htslib"
 git clone https://github.com/samtools/htslib.git
+cd htslib
+git checkout tags/1.2.1
+make
+cd ../
 
 echo "downloading samtols"
 git clone https://github.com/samtools/samtools.git
 cd samtools
-git checkout tags/0.1.19
-make
-cd ../
-
-echo "downloading bedtools2"
-git clone https://github.com/arq5x/bedtools2.git
-cd bedtools2
-git checkout tags/v2.19.0
+git checkout tags/1.2
 make
 cd ../
 
 echo "downloading bcftools"
 git clone https://github.com/samtools/bcftools.git
 cd bcftools
+git checkout tags/1.2
+make
+cd ../
+
+echo "downloading bedtools2"
+git clone https://github.com/arq5x/bedtools2.git
+cd bedtools2
+git checkout tags/v2.24.0
 make
 cd ../
 
@@ -59,17 +63,13 @@ echo "downloading bwa"
 git clone https://github.com/lh3/bwa.git
 cd bwa
 git checkout tags/0.7.7
-cd ../
-
-echo "downloading vcftools"
-# svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
-wget -O vcftools.tar.gz http://sourceforge.net/projects/vcftools/files/vcftools_0.1.12b.tar.gz/download
-tar xvf vcftools.tar.gz
-rm vcftools.tar.gz
-cd vcftools_0.1.12b
 make
 cd ../
 
+echo "downloading vcftools"
+svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
+cd vcftoolsmake
+cd ../
 
 # echo "downloading bowtie-1"
 # wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
@@ -85,7 +85,6 @@ echo "downloading tophat2"
 wget -O tophat2.tar.gz http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.14.Linux_x86_64.tar.gz
 tar xvf tophat2.tar.gz
 rm tophat2.tar.gz
-
 
 echo "downloading cufflinks"
 wget -O cufflinks.tar.gz http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
@@ -148,6 +147,15 @@ rm snpEff_latest_core.zip
 
 echo "downloading STAR"
 git clone https://github.com/alexdobin/STAR.git
-cd STAR
+cd STAR/source
 make STAR
+cd ../
+
+echo "downloading Platytpus"
+git clone https://github.com/andyrimmer/Platypus.git
+cd Platypus
+export C_INCLUDE_PATH=../htslib/:$C_INCLUDE_PATH
+export LIBRARY_PATH=../htslib/:$LIBRARY_PATH
+export LD_LIBRARY_PATH=../htslib/:$LD_LIBRARY_PATH
+make
 cd ../
