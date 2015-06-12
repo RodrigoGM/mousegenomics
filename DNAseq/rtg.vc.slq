@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=RTG_vc
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+##SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="RTGvc-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+##SBATCH --time=00:00:10
+# and "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=12 --mem-per-cpu=4000
+##SBATCH  --ntasks-per-node=1 --mem-per-cpu=200
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+###SBATCH --array=0-4:1 ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+
+#-----------------------    <USAGE>   ---------------------------
+#   This script runs RealTimeGenomics (RTG) SNP variant detection.
+#  Currently, the script uses the `population` algorithim as we 
+#  are detecing SNP in several unrelated mice, however, a couple
+#  of these are. at the moment it's test only.
+# 
+#  $ sbatch rtg.vc.slq <bam file list>.input
+#
+[[ $# -gt 0 ]] || { 
+    echo "   This script runs RealTimeGenomics (RTG) SNP variant detection."
+    echo "  Currently, the script uses the `population` algorithim as we "
+    echo "  are detecing SNP in several unrelated mice, however, a couple"
+    echo "  of these are. at the moment it's test only."
+    
+    echo "  $ sbatch rtg.vc.slq <bam file list>.input"
+    
+    exit 1; }
+#-----------------------   </USAGE>   ---------------------------
+
+
+set -e
+source ~/.bashrc
+source ../envar.sh
+
+vcInput=$1
+
+export RTG_MEM=45G
+
+echo "## ============= BAM calibration ============= ##"
+#rtg calibrate --template=${RTG}  --threads=$SLURM_JOB_CPUS_PER_NODE -I $vcInput
+
+echo "## ============= BAM statistics ============== ##"
+rtg coverage --template=${RTG} -p sequenced.ped -o Coverage -I $vcInput --threads=$SLURM_JOB_CPUS_PER_NODE
+
+echo "## ============= Variant calling / population ============= ##"
+rtg population --template=${RTG} -p sequenced.ped -o StrainVariants -I $vcInput --machine-errors=illumina --min-mapq=20 --threads=$SLURM_JOB_CPUS_PER_NODE
+rtg snp --template=${RTG} -p sequenced.ped -o StrainVariantsSNP -I $vcInput --machine-errors=illumina --min-mapq=20 --threads=$SLURM_JOB_CPUS_PER_NODE
+
+echo "## ============= CNV calling / population ============= ##"
+rtg cnv  --template=${RTG} -p sequenced.ped -o CNV --machine-errors=illumina --min-mapq=20 --threads=$SLURM_JOB_CPUS_PER_NODE -I $vcInput
+
+#echo "## ============= SV detection  ============= ##"
+#rtg sv
+#rtg discord --bed -I freeb.input -o StrucVar -t $RTG --consistent-only 

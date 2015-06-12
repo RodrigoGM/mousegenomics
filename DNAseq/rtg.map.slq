@@ -1,0 +1,117 @@
+#!/bin/bash
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=RTG_map
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="RTGmap-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=2-00:00:00
+# and "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=10 --nodes=1 --mem-per-cpu=6400
+
+# ---- Array Control ----  if available
+# -- format: 0-7:1 0 through 7 by one
+##SBATCH --array=0-4:1 ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+
+#-----------------------    <USAGE>   ---------------------------
+#   The script maps all the *fastq.gz in a director/ of choice 
+# using Real Time Genomics (rtg). In addition we run 'samstats'.
+#   There are two ways to run this script depending on the SLURM
+# distribution.  Previous versions to SLURM 2.6 don't have array
+# support, thus to circumvent array support but to keep the script
+# compatible with new versions we create the SLURM_ARRAY_TASK_ID
+# and pass the array value using a for | while loop.
+#   If array support is available, this variable should be
+# commented out to avoid conflict with the variable created by
+# SLURM itself.
+#
+#   Any of the two commands : 
+# 
+#  $ for i in {0..4} ; do sbatch rtg.map.na.slq founders/ $i ; done
+#  $ sbatch --array=0-4 rtg.map.na.slq founders/N
+
+[[ $# -gt 0 ]] || { 
+    echo  "     The script maps all the *fastq.gz in a director/ of choice "
+    echo  "   using Real Time Genomics (rtg). In addition we run 'samstats'."
+    echo  "     There are two ways to run this script depending on the SLURM"
+    echo  "   distribution.  Previous versions to SLURM 2.6 don't have array"
+    echo  "   support, thus to circumvent array support but to keep the script"
+    echo  "   compatible with new versions we create the SLURM_ARRAY_TASK_ID"
+    echo  "   and pass the array value using a for | while loop."
+    echo  "     If array support is available, this variable should be"
+    echo  "   commented out to avoid conflict with the variable created by"
+    echo  "   SLURM itself."
+    echo  ""
+    echo  "   Any fo the two commands : "
+    echo  ""
+    echo  "   Without array functionality in SLURM"
+    echo  "   $ for i in {0..4}; do sbatch rtg.map.na.slq founders/N $i ; done"
+    echo  ""
+    echo  "   With array functionality in SLURM"    
+    echo  "   $ sbatch --array=0-4 rtg.map.na.slq founders/N"
+    echo  "     ** disable SLURM_ARRAY_TASK_ID from this script in line 78"
+exit 1; }
+
+#-----------------------   </USAGE>   ---------------------------
+
+set -e
+source ~/.bashrc
+source ../envar.sh
+
+## set if SLURM array is not available.  Must be passed in second position
+# SLURM_ARRAY_TASK_ID=$2
+echo "ARRAY JOB :: ${SLURM_ARRAY_TASK_ID}"
+
+## i.e. directory : founders or backcross
+FLOW=`echo $1 | awk '{n = split($0, arra, "/"); print arra[n-1]}'`
+echo "FLOW :: ${FLOW}"
+
+## make a list of all  *fastq.gz files in a directory or a pattern
+## create array
+R1=(`ls $1*R1*.fastq.gz`)
+R2=(`ls $1*R2*.fastq.gz`)
+
+## mouse ID
+MID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[2]}'`
+## Genomics Platform Library ID : NGS14****
+
+LIBRARY=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n =split($0, arra, "/"); split(arra[n], brra, "_"); print brra[1]}'`
+## sequencing lane
+
+LANE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} |  awk '{split($1,BARR,"_"); for (x in BARR) if (index(BARR[x],"L0") == 1){ print BARR[x]};}'` ## L000
+echo "SAMPLE :: ${MID} :: ${LIBRARY}"
+
+## RG header
+RG="@RG\tID:${MID}_${FLOW}_${LANE}\tPL:ILLUMINA\tPU:${FLOW}\tSM:${MID}\tLB:${LIBRARY}"
+echo "BAM HEADER :: ${RG}"
+
+## print R1 and R2 files
+echo "FILE ANALYZED :: "${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]}
+
+echo "## ============= Mapping & sorting ============= ##"
+
+readonly RTG_MEM=60G
+
+rtg map -F fastq -q sanger --template=${RTG} -l ${R1[$SLURM_ARRAY_TASK_ID]} -r ${R2[$SLURM_ARRAY_TASK_ID]} -o $MID --sam-rg=${RG} --threads=$SLURM_JOB_CPUS_PER_NODE -d fr --pedigree=sequenced.ped
+
+cd $MID
+rtg samstats --template=${RTG} --validate --distributions alignments.bam
+
+## echo " --template=${RTG} -l ${R1[$SLURM_ARRAY_TASK_ID]} -r ${R2[$SLURM_ARRAY_TASK_ID]} -o $MID --sam-rg=${RG} --threads=$SLURM_JOB_CPUS_PER_NODE"
+## java -Xmx96000M -jar ~/src/rtg-core/RTG.jar map -F fastq -q sanger --template=${RTG} -l ${R1[$SLURM_ARRAY_TASK_ID]} -r ${R2[$SLURM_ARRAY_TASK_ID]} -o $MID --sam-rg=${RG} --threads=$SLURM_JOB_CPUS_PER_NODE -d fr --pedigree=sequenced.ped
+
+

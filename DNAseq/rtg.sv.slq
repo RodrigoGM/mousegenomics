@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=RTG_sv
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+##SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="RTGsv-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+# and "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=12 --mem-per-cpu=4000
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+###SBATCH --array=0-4:1 ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+
+#-----------------------    <USAGE>   ---------------------------
+#   This script runs RealTimeGenomics (RTG) SNP variant detection.
+#  Currently, the script uses the `population` algorithim as we 
+#  are detecing SNP in several unrelated mice, however, a couple
+#  of these are. at the moment it's test only.
+# 
+#  $ sbatch rtg.sv.slq <bam file list>.input
+#
+[[ $# -gt 0 ]] || { 
+    echo "   This script runs RealTimeGenomics (RTG) SNP variant detection."
+    echo "  Currently, the script uses the `population` algorithim as we "
+    echo "  are detecing SNP in several unrelated mice, however, a couple"
+    echo "  of these are. at the moment it's test only."
+    
+    echo "  $ sbatch rtg.sv.slq <bam file list>.input"
+    
+    exit 1; }
+#-----------------------   </USAGE>   ---------------------------
+
+
+set -e
+source ~/.bashrc
+source ../envar.sh
+
+vcInput=$1
+echo "## ============= BAM calibration ============= ##"
+#JAVA_OPTS=-Xmx46000M rtg calibrate --template=${RTG}  --threads=$SLURM_JOB_CPUS_PER_NODE -I $vcInput
+
+echo "## ============= SNP variant calling / population ============= ##"
+#JAVA_OPTS=-Xmx46000M rtg population --template=${RTG} -p sequenced.ped -o StrainVariants --machine-errors=illumina --min-mapq=20 --threads=$SLURM_JOB_CPUS_PER_NODE -I $vcInput
+
+echo "## ============= SV detection  ============= ##"
+#JAVA_OPTS=-Xmx46000M rtg svprep StrucVar/
+#JAVA_OPTS=-Xmx46000M rtg sv
+#JAVA_OPTS=-Xmx46000M rtg discord --bed -I freeb.input -o StrucVar -t $RTG --consistent-only 
