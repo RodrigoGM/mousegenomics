@@ -1,9 +1,9 @@
 #!/bin/bash
 
-## creates sym links for all executable files in ~/programs with -type f and -perm +111
+## creates sym links for all executable files in ~/src with -type f and -perm +111
 ## in the $HOME/bin directory
 
-for exec in $(find $HOME/programs/* -type f -perm +111)
+for exec in $(find $HOME/src/* -type f -perm +111)
 do 
     if [ -x $exec ]
 	then cp -rs $exec ~/bin/
@@ -15,28 +15,56 @@ done
 ## perl, shell and python scripts were also removed.
 cd $HOME/bin
 
-rm *.fa *.sample *.bed Makefile *.rst *genome *.sh *.html *.css *.fna *.ebwt AUTH* *README* LICENSE* MANUAL* NEWS* TUTORIAL VERSION *.fq *.raw *.pl md5* test.t *.lua *.py *.so *.conf *.bat rtd.css_t
+rm *.* *~ Makefile AUTH* *README* LICENSE* MANUAL* NEWS* TUTORIAL VERSION GETDISTNAME GETMAKEVAL THANKS
 
 cd ../
 
-## creates sym links for all shell and perl scripts in $HOME/programs
+## creates sym links for all shell and perl scripts in $HOME/src
 ## in the $HOME/scripts directory
 if [ -f $HOME/scripts ]
     then echo found scripts
     else mkdir scripts
 fi
 
-for exec in $(find $HOME/programs/* -name "*.sh")
+for exec in $(find $HOME/src/* -name "*.sh")
 do 
     if [ -x $exec ]
 	then cp -rs $exec $HOME/scripts/
     fi
 done
 
-for exec in $(find $HOME/programs/* -name "*.pl")
+for exec in $(find $HOME/src/* -name "*.pl")
 do 
     if [ -x $exec ]
 	then cp -rs $exec $HOME/scripts/
+    fi
+done
+
+for exec in $(find $HOME/src/* -name "*.jar")
+do 
+    if [ -x $exec ]
+	then cp -rs $exec $HOME/scripts/
+    fi
+done
+
+for exec in $(find $HOME/src/* -name "*.py")
+do 
+    if [ -x $exec ]
+	then cp -rs $exec $HOME/scripts/
+    fi
+done
+
+for exec in $(find $HOME/src/* -name "*.R")
+do
+    if [ -x $exec ]
+        then cp -rs $exec $HOME/scripts/
+    fi
+done
+
+for exec in $(find $HOME/src/* -name "*.r")
+do
+    if [ -x $exec ]
+        then cp -rs $exec $HOME/scripts/
     fi
 done
 

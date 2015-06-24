@@ -18,40 +18,44 @@ if [ -f $HOME/bin ]
          echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
 fi
 
-
-if [ -f $HOME/programs ]
-    then echo "$HOME/programs present"
-    else mkdir -p $HOME/programs
-         echo "Created $HOME/programs"
+if [ -f $HOME/src ]
+    then echo "$HOME/src present"
+    else mkdir -p $HOME/src
+         echo "Created $HOME/src"
 fi
 
-cd $HOME/programs
+cd $HOME/src
 
 if [ -x `which git` ]
     then echo "git found, continuing"
     else "'git' not found, please install git to continue http://git-scm.com/downloads "
 fi
 
-echo "downloading htlib"
+echo "downloading htslib"
 git clone https://github.com/samtools/htslib.git
+cd htslib
+git checkout tags/1.2.1
+make
+cd ../
 
 echo "downloading samtols"
 git clone https://github.com/samtools/samtools.git
 cd samtools
-git checkout tags/0.1.19
-make
-cd ../
-
-echo "downloading bedtools2"
-git clone https://github.com/arq5x/bedtools2.git
-cd bedtools2
-git checkout tags/v2.19.0
+git checkout tags/1.2
 make
 cd ../
 
 echo "downloading bcftools"
 git clone https://github.com/samtools/bcftools.git
 cd bcftools
+git checkout tags/1.2
+make
+cd ../
+
+echo "downloading bedtools2"
+git clone https://github.com/arq5x/bedtools2.git
+cd bedtools2
+git checkout tags/v2.24.0
 make
 cd ../
 
@@ -59,35 +63,31 @@ echo "downloading bwa"
 git clone https://github.com/lh3/bwa.git
 cd bwa
 git checkout tags/0.7.7
-cd ../
-
-echo "downloading vcftools"
-wget -O vcftools.tar.gz http://sourceforge.net/projects/vcftools/files/vcftools_0.1.11.tar.gz/download
-tar xvf vcftools.tar.gz
-rm vcftools.tar.gz
-cd vcftools_0.1.11
 make
 cd ../
 
+echo "downloading vcftools"
+svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
+cd vcftoolsmake
+cd ../
 
-echo "downloading bowtie-1"
-wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
-unzip bowtie.zip
-rm bowtie.zip
+# echo "downloading bowtie-1"
+# wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
+# unzip bowtie.zip
+# rm bowtie.zip
 
 echo "downloading bowtie2"
-wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.1.0/bowtie2-2.1.0-linux-x86_64.zip/download
+wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.5/bowtie2-2.2.5-linux-x86_64.zip/download
 unzip bowtie2.zip
 rm bowtie2.zip
 
 echo "downloading tophat2"
-wget -O tophat2.tar.gz http://tophat.cbcb.umd.edu/downloads/tophat-2.0.10.Linux_x86_64.tar.gz
+wget -O tophat2.tar.gz http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.14.Linux_x86_64.tar.gz
 tar xvf tophat2.tar.gz
 rm tophat2.tar.gz
 
-
 echo "downloading cufflinks"
-wget -O cufflinks.tar.gz http://cufflinks.cbcb.umd.edu/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
+wget -O cufflinks.tar.gz http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
 tar xvf cufflinks.tar.gz
 rm cufflinks.tar.gz
 
@@ -118,4 +118,44 @@ tar xvf htseq.tar.gz
 rm htseq.tar.gz
 cd HTSeq-0.6.1
 python setup.py install --user
+cd ../
+
+echo "downloading FastQC"
+wget -O fastqc.tar.gz http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
+unzip fastqc.tar.gz
+rm fastqc.tar.gz
+
+echo "downloading picard-tools"
+wget -O picard-tools.zip http://sourceforge.net/projects/picard/files/picard-tools/1.119/picard-tools-1.119.zip/download
+unzip picard-tools.zip
+rm picard-tools.zip
+# cd picard-tools-1.119
+
+echo "downloading ensembl-tools"
+git clone https://github.com/Ensembl/ensembl-tools.git
+
+echo "downloading freebayes"
+git clone --recursive https://github.com/ekg/freebayes.git
+cd freebayes 
+make
+cd ../
+
+echo "downloading snpEff"
+wget -O snpEff_latest_core.zip http://sourceforge.net/projects/snpeff/files/snpEff_latest_core.zip/download
+unzip snpEff_latest_core.zip
+rm snpEff_latest_core.zip
+
+echo "downloading STAR"
+git clone https://github.com/alexdobin/STAR.git
+cd STAR/source
+make STAR
+cd ../
+
+echo "downloading Platytpus"
+git clone https://github.com/andyrimmer/Platypus.git
+cd Platypus
+export C_INCLUDE_PATH=../htslib/:$C_INCLUDE_PATH
+export LIBRARY_PATH=../htslib/:$LIBRARY_PATH
+export LD_LIBRARY_PATH=../htslib/:$LD_LIBRARY_PATH
+make
 cd ../
