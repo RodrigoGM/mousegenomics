@@ -73,7 +73,7 @@ source ~/.bashrc
 source ../envar.sh
 
 ## set if SLURM array is not available.  Must be passed in second position
-# SLURM_ARRAY_TASK_ID=$2
+SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-2}
 echo "ARRAY JOB :: ${SLURM_ARRAY_TASK_ID}"
 
 ## i.e. directory : founders or backcross
@@ -104,7 +104,7 @@ echo "FILE ANALYZED :: "${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]}
 
 echo "## ============= Mapping & sorting ============= ##"
 
-readonly RTG_MEM=60G
+readonly RTG_MEM=$(( $SLURM_JOB_CPU_PER_NODE * $SLURM_MEM_PER_CPU / 1000))G
 
 rtg map -F fastq -q sanger --template=${RTG} -l ${R1[$SLURM_ARRAY_TASK_ID]} -r ${R2[$SLURM_ARRAY_TASK_ID]} -o $MID --sam-rg=${RG} --threads=$SLURM_JOB_CPUS_PER_NODE -d fr --pedigree=sequenced.ped
 

@@ -36,16 +36,11 @@
 # -----------------------[SLURM : END]---------------------------
 
 source ~/.bashrc
+source ../envar.sh
 
 ## module add
 module add Java/1.7.0_21
 module add R/3.0.2
-
-## path to genome assembly mm9 or mm10
-GATK=/home/ulg/genan/rgularte/programs/GenomeAnalysisTK-2.8-1-g932cd3a
-MM10=${GLOBALSCRATCH}/mus_musculus/Ensembl/NCBIM37/Sequence/WholeGenomeFasta/genome.fa
-##SNP=
-##INDEL=
 
 input=(
 $(cat bam.files)

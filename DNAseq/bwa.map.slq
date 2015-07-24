@@ -39,6 +39,7 @@ source $(find ../ -name 'envar.sh' -type f)
 ## $SLURM_ARRAY_TASK_ID is a SLURM environment variable that contains the value
 ## of the array item we are running.  In this case, any value from 0 to 4.
 ## Start your count at 0 in bash
+SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-$2}
 echo "ARRAY JOB :: ${SLURM_ARRAY_TASK_ID}"
 
 ## FLOW, Folder where things are located; I think

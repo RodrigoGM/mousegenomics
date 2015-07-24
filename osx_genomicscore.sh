@@ -1,4 +1,4 @@
-#!/bin/bash
+k#!/bin/bash
 
 ## For seting up a Mac OS X genomics core, the best tool to use is Homebrew.
 ##  We will install this first, and then proceed with additional packages not

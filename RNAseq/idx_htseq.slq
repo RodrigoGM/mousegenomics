@@ -32,14 +32,9 @@
 #set -e  ## use a `#` to deactivate
 
 ## path to genome assembly and annotation files
-MMU=$7
-MM10=$1
-BWT2=$2
-GTF=$3
-REFFLAT=$4
-OUTDIR=$5
-LIBTYPE=$6
-GFF=$8
+source $( find ../ -name 'envar.sh' )
+
+OUTDIR=$1
 
 echo " # ======== RUN INFORMATION ======== # "
 
