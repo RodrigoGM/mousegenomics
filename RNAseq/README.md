@@ -40,3 +40,12 @@ Read counts
    idx_htseq.slq : idexes and runs htseq-cout to count reads on the output of Tophat i.e. accepted_hits.bam files
    
    
+Transcriptome assembly
+---
+1) Trinity RNAseq
+   multiLib.tx.assembly.slq : Script executes a single run of the Trinity assembler combining all the libraries (i.e. *R1.fastq.gz and *R2.fastq.gz) in a single directory containing both R1 and R2 in fastq format (passed as first argument).  Script will format the *R1.fatsq.gz and *R2.fastq.gz contained in a single directory to a single comma separated string.  Optionally, the option to use all the libraries can be changed to use a *R1.csv and *R2.csv files by changing the R1CSV and R2CSV environment variables.
+
+   byLib.tx.assembly.slq : Runs the Trinity assembler in all the libraries (i.e. *R1.fastq.gz and *R2.fastq.gz) contained in a single directory individualy.
+   
+
+	

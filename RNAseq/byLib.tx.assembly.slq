@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=TrinityBuild
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="TrinityBuild-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=5-00:00:00  # "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=24 --mem-per-cpu=5000
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+##SBATCH --array=0-19   ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+## Require arugment of Fastq folder to continue
+## [[ $# -gt 0 ]] || {
+## echo "This script expects the directory name and output directory as first,"
+## echo " and second arguments, respectively"
+## echo "Fastq files are standard from Illumina <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
+## echo "and that the fastq for R1/R2 are in the same directory. "
+## echo "sbatch --array=0-<NumLib> trinity.assembly.slq ../fastq/ "
+## echo " for i in {0..38}; do sbatch trinity.assembly.slq ../fastq/NGS15-D2 $i ; done"
+##  exit 1; }
+
+## Kill script if any commands fail
+set -e
+
+R1=( $(ls $1*R1.fastq.gz) )
+R2=( $(ls $1*R2.fastq.gz) )
+
+R1CSV=$(echo ${R1[@]} | sed 's/ /,/g')  ## $(echo ${R1[2]} ${R1[13]} ${R1[25]} | sed 's/ /,/g')  ##  R1CSV=( $( cat fastq.R1.csv ) )  ## 
+R2CSV=$(echo ${R2[@]} | sed 's/ /,/g')  ## $(echo ${R2[2]} ${R2[13]} ${R2[25]} | sed 's/ /,/g')  ##  R2CSV=( $( cat fastq.R2.csv ) )  ## 
+
+SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-$2}
+
+QID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[1]}'`
+LIBRARY=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n =split($0, arra, "/"); split(arra[n], brra, "_"); print brra[2]}'`
+
+~/src/trinityrnaseq/Trinity --trimmomatic --normalize_reads --seqType fq --max_memory $(( $SLURM_MEM_PER_CPU * $SLURM_NTASKS / 1000 ))G --left ${R1[$SLURM_ARRAY_TASK_ID]} --right ${R2[$SLURM_ARRAY_TASK_ID]} --SS_lib_type FR --CPU $SLURM_JOB_CPUS_PER_NODE --output TxAssembly/${LIBRARY}_trinity --full_cleanup
