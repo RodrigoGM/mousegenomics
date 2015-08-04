@@ -97,6 +97,14 @@ wget -O cufflinks.tar.gz http://cole-trapnell-lab.github.io/cufflinks/assets/dow
 tar xvf cufflinks.tar.gz
 rm cufflinks.tar.gz
 
+echo "downloading numpy and scipy"
+[[ -x numpy ]] || git clone http://github.com/numpy/numpy.git
+cd numpy
+git pull origin master
+python setup.py install --user
+python runtests.py
+cd ../
+
 echo "downloading miso"
 [[ -x MISO ]] || git clone https://github.com/yarden/MISO.git
 cd MISO
@@ -110,14 +118,6 @@ tar xvf matplotlib.tar.gz
 rm matplotlib.tar.gz
 cd matplotlib-1.3.1
 python setup.py install --user
-cd ../
-
-echo "downloading numpy and scipy"
-[[ -x numpy ]] || git clone http://github.com/numpy/numpy.git
-cd numpy
-git pull origin master
-python setup.py install --user
-python runtests.py
 cd ../
 
 echo "downloading HTSeq"
