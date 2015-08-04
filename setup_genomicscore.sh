@@ -179,9 +179,21 @@ export LD_LIBRARY_PATH=../htslib/:$LD_LIBRARY_PATH
 make
 cd ../
 
-echo "downloading Trinity assembler"
+echo "downloading Trinity assembler, TransDecoder, and Triannotate"
 [[ -x trinityrnaseq ]] || git clone https://github.com/trinityrnaseq/trinityrnaseq.git
 cd trinityrnaseq
 git pull origin master
 git checkout tags/v2.0.6
+cd ../
+
+[[ -x TransDecoder ]]|| https://github.com/TransDecoder/TransDecoder.git
+cd TransDecoder
+git pull origin master
+git checkout tags/v2.0.1
+cd ../
+
+[[ -x Trianotate ]] || https://github.com/Trinotate/Trinotate.git
+cd Trianotate
+git pull origin master
+git checkout tags/v2.0.2
 cd ../
