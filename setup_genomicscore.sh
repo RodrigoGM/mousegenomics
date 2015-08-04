@@ -32,49 +32,55 @@ if [ -x `which git` ]
 fi
 
 echo "downloading htslib"
-git clone https://github.com/samtools/htslib.git
+[[ -x htslib ]] || git clone https://github.com/samtools/htslib.git
 cd htslib
+git pull 
 git checkout tags/1.2.1
 make
 cd ../
 
-echo "downloading samtols"
-git clone https://github.com/samtools/samtools.git
+echo "downloading samtools"
+[[ -x samtools ]] || git clone https://github.com/samtools/samtools.git
 cd samtools
+git pull
 git checkout tags/1.2
 make
 cd ../
 
 echo "downloading bcftools"
-git clone https://github.com/samtools/bcftools.git
+[[ -x bcftools ]] || git clone https://github.com/samtools/bcftools.git
 cd bcftools
+git pull
 git checkout tags/1.2
 make
 cd ../
 
 echo "downloading bedtools2"
-git clone https://github.com/arq5x/bedtools2.git
+[[ -x bedtools2 ]] || git clone https://github.com/arq5x/bedtools2.git
 cd bedtools2
+git pull
 git checkout tags/v2.24.0
 make
 cd ../
 
 echo "downloading bwa"
-git clone https://github.com/lh3/bwa.git
+[[ -x bwa ]] || git clone https://github.com/lh3/bwa.git
 cd bwa
 git checkout tags/0.7.7
 make
 cd ../
 
 echo "downloading vcftools"
-svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
-cd vcftoolsmake
+[[ -x vcftools ]] || svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
+cd vcftools
+svn update
+make
 cd ../
 
-# echo "downloading bowtie-1"
-# wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
-# unzip bowtie.zip
-# rm bowtie.zip
+echo "downloading bowtie-1"
+wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
+unzip bowtie.zip
+rm bowtie.zip
 
 echo "downloading bowtie2"
 wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.5/bowtie2-2.2.5-linux-x86_64.zip/download
@@ -92,8 +98,9 @@ tar xvf cufflinks.tar.gz
 rm cufflinks.tar.gz
 
 echo "downloading miso"
-git clone https://github.com/yarden/MISO.git
+[[ -x MISO ]] || git clone https://github.com/yarden/MISO.git
 cd MISO
+git pull
 python setup.py install --user
 cd ../
 
@@ -106,8 +113,9 @@ python setup.py install --user
 cd ../
 
 echo "downloading numpy and scipy"
-git clone http://github.com/numpy/numpy.git
+[[ -x numpy ]] || git clone http://github.com/numpy/numpy.git
 cd numpy
+git pull
 python setup.py install --user
 python runtests.py
 cd ../
@@ -132,13 +140,19 @@ rm picard-tools.zip
 # cd picard-tools-1.119
 
 echo "downloading ensembl-tools"
-git clone https://github.com/Ensembl/ensembl-tools.git
+[[ -x ensembl-tools ]] || git clone https://github.com/Ensembl/ensembl-tools.git
+cd ensembl-tools
+git pull
+cd ../
 
 echo "downloading freebayes"
-git clone --recursive https://github.com/ekg/freebayes.git
-cd freebayes 
+[[ -x freebayes ]] || git clone --recursive https://github.com/ekg/freebayes.git
+cd freebayes
+git pull
 make
-cd ../
+cd vcflib
+make
+cd ../../
 
 echo "downloading snpEff"
 wget -O snpEff_latest_core.zip http://sourceforge.net/projects/snpeff/files/snpEff_latest_core.zip/download
@@ -146,16 +160,28 @@ unzip snpEff_latest_core.zip
 rm snpEff_latest_core.zip
 
 echo "downloading STAR"
-git clone https://github.com/alexdobin/STAR.git
-cd STAR/source
+[[ -x STAR ]] || git clone https://github.com/alexdobin/STAR.git
+cd STAR/
+git pull
+
+cd source/
 make STAR
-cd ../
+cd ../../
+
 
 echo "downloading Platytpus"
-git clone https://github.com/andyrimmer/Platypus.git
+[[ -x Platypus ]] || git clone https://github.com/andyrimmer/Platypus.git
 cd Platypus
+git pull
 export C_INCLUDE_PATH=../htslib/:$C_INCLUDE_PATH
 export LIBRARY_PATH=../htslib/:$LIBRARY_PATH
 export LD_LIBRARY_PATH=../htslib/:$LD_LIBRARY_PATH
 make
+cd ../
+
+echo "downloading Trinity assembler"
+[[ -x trinityrnaseq ]] || git clone https://github.com/trinityrnaseq/trinityrnaseq.git
+cd trinityrnaseq
+git pull
+git checkout tags/v2.0.6
 cd ../
