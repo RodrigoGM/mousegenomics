@@ -34,7 +34,7 @@ fi
 echo "downloading htslib"
 [[ -x htslib ]] || git clone https://github.com/samtools/htslib.git
 cd htslib
-git pull 
+git pull origin master 
 git checkout tags/1.2.1
 make
 cd ../
@@ -42,7 +42,7 @@ cd ../
 echo "downloading samtools"
 [[ -x samtools ]] || git clone https://github.com/samtools/samtools.git
 cd samtools
-git pull
+git pull origin master
 git checkout tags/1.2
 make
 cd ../
@@ -50,7 +50,7 @@ cd ../
 echo "downloading bcftools"
 [[ -x bcftools ]] || git clone https://github.com/samtools/bcftools.git
 cd bcftools
-git pull
+git pull origin master
 git checkout tags/1.2
 make
 cd ../
@@ -58,7 +58,7 @@ cd ../
 echo "downloading bedtools2"
 [[ -x bedtools2 ]] || git clone https://github.com/arq5x/bedtools2.git
 cd bedtools2
-git pull
+git pull origin master
 git checkout tags/v2.24.0
 make
 cd ../
@@ -71,9 +71,9 @@ make
 cd ../
 
 echo "downloading vcftools"
-[[ -x vcftools ]] || svn checkout http://svn.code.sf.net/p/vcftools/code/trunk/ vcftools
+[[ -x vcftools ]] || git clone https://github.com/vcftools/vcftools.git
 cd vcftools
-svn update
+git pull origin master
 make
 cd ../
 
@@ -100,7 +100,7 @@ rm cufflinks.tar.gz
 echo "downloading miso"
 [[ -x MISO ]] || git clone https://github.com/yarden/MISO.git
 cd MISO
-git pull
+git pull origin master
 python setup.py install --user
 cd ../
 
@@ -115,7 +115,7 @@ cd ../
 echo "downloading numpy and scipy"
 [[ -x numpy ]] || git clone http://github.com/numpy/numpy.git
 cd numpy
-git pull
+git pull origin master
 python setup.py install --user
 python runtests.py
 cd ../
@@ -142,13 +142,13 @@ rm picard-tools.zip
 echo "downloading ensembl-tools"
 [[ -x ensembl-tools ]] || git clone https://github.com/Ensembl/ensembl-tools.git
 cd ensembl-tools
-git pull
+git pull origin master
 cd ../
 
 echo "downloading freebayes"
 [[ -x freebayes ]] || git clone --recursive https://github.com/ekg/freebayes.git
 cd freebayes
-git pull
+git pull origin master
 make
 cd vcflib
 make
@@ -162,7 +162,7 @@ rm snpEff_latest_core.zip
 echo "downloading STAR"
 [[ -x STAR ]] || git clone https://github.com/alexdobin/STAR.git
 cd STAR/
-git pull
+git pull origin master
 
 cd source/
 make STAR
@@ -172,7 +172,7 @@ cd ../../
 echo "downloading Platytpus"
 [[ -x Platypus ]] || git clone https://github.com/andyrimmer/Platypus.git
 cd Platypus
-git pull
+git pull origin master
 export C_INCLUDE_PATH=../htslib/:$C_INCLUDE_PATH
 export LIBRARY_PATH=../htslib/:$LIBRARY_PATH
 export LD_LIBRARY_PATH=../htslib/:$LD_LIBRARY_PATH
@@ -182,6 +182,6 @@ cd ../
 echo "downloading Trinity assembler"
 [[ -x trinityrnaseq ]] || git clone https://github.com/trinityrnaseq/trinityrnaseq.git
 cd trinityrnaseq
-git pull
+git pull origin master
 git checkout tags/v2.0.6
 cd ../
