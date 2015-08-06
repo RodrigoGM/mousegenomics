@@ -18,7 +18,7 @@
 ##SBATCH --time=48:00:00  # "days-hours:minutes:seconds"
 
 # ---- Resources ----
-#SBATCH --ntasks-per-node=4 --mem-per-cpu=10000
+#SBATCH --ntasks-per-node=24 --mem-per-cpu=21300
 ## --exclusive
 # ---- Array Control ----  
 # -- format: 0-7:1 0 through 7 by one
@@ -26,14 +26,14 @@
 
 # -----------------------[SLURM : END]---------------------------
 ## Require arugment of Fastq folder to continue
-## [[ $# -gt 0 ]] || {
-## echo "This script expects the directory name and output directory as first,"
-## echo " and second arguments, respectively"
-## echo "Fastq files are standard from Illumina <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
-## echo "and that the fastq for R1/R2 are in the same directory. "
-## echo "sbatch --array=0-<NumLib> trinity.assembly.slq ../fastq/ "
-## echo " for i in {0..38}; do sbatch trinity.assembly.slq ../fastq/NGS15-D2 $i ; done"
-##  exit 1; }
+[[ $# -gt 0 ]] || {
+echo "This script expects the directory name and output directory as first,"
+echo " and second arguments, respectively"
+echo "Illumina Fastq files named <SampleID>_<LibraryID/Index_LANE_...R*.fastq.gz>"
+echo "and that the fastq for R1/R2 are in the same directory. "
+echo "sbatch --array=0-38 trinity.assembly.slq ../fastq/ "
+echo " for i in {0..38}; do sbatch trinity.assembly.slq ../fastq/ $i ; done"
+ exit 1; }
 
 ## Kill script if any commands fail
 set -e
