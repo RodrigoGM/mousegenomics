@@ -10,7 +10,7 @@
 #     (ALL = BEGIN, END, FAIL, REQUEUE)
 
 # -- output prefex
-#SBATCH --output="Star2PG-%j.out"
+#SBATCH --output="STAR2PG-%j.out"
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
