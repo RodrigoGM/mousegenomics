@@ -20,7 +20,7 @@
 # "days-hours:minutes:seconds"
 
 # ---- Resources ----
-#SBATCH --ntasks=1 --ntasks-per-node=1 --mem-per-cpu=74000
+#SBATCH --ntasks=1 --ntasks-per-node=1 --mem-per-cpu=85000
 
 # -----------------------[SLURM : END]---------------------------
 
@@ -32,7 +32,11 @@ STAR --runMode genomeGenerate \
     --sjdbGTFfile Grcm38.genes.gtf --sjdbOverhang  100 \
     --sjdbFileChrStartEnd SJ.Pass1.sjdb \
     --runThreadN $SLURM_JOB_CPUS_PER_NODE \
-    --limitGenomeGenerateRAM 64554432000 
+    --limitGenomeGenerateRAM 90194313216 
+
+## Gb  Bit (Kb = 1024)
+##  84  90194313216
+## 124 133143986176
 
 ## We generate an annotated star genome index for the 2pass method described by 
 ##  Engstrom et al. 2013 (Online at http://www.ncbi.nlm.nih.gov/pubmed/24185836, 
