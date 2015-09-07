@@ -12,7 +12,7 @@
 #     (ALL = BEGIN, END, FAIL, REQUEUE)
 
 # -- output prefex
-#SBATCH --output="Star-%j.out"
+#SBATCH --output="STAR-%j.out"
 
 #  By default both standard output and  standard  error are 
 # directed to a file of the name "slurm-%j.out", where the "%j" 
