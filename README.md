@@ -1,4 +1,4 @@
-mouseomics
+Mouse Genomics
 ==========
 
 This repository contains code to help with the setup of a Genomics cluster without
