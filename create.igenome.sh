@@ -15,10 +15,11 @@ echo " # ====   THIS SCRIPT IS SPECIFIC FOR MOUSE GRCm38  ==== # "
 ## CURRIG = name of current iGenome if you need to copy any file
 ## IGENOME = path to the location of where you want the iGenome
 ##    to be built
-REF=Grcm38
-MMU=$HOME/mmu
-CURRIG=/globalfs/rgularte/mus_musculus/Ensembl/NCBIM37
+REF=Grcm38.p4
+MMU=/Volumes/u214929/GEN/UAG/TGV/mus_musculus/
+CURRIG=$MMU/Ensembl/Grcm38/
 IGENOME=${MMU}/${REF}
+RELEASE=81
 
 ## this chunk of code copies directory structure from an exisitng 
 ## iGenome.  The iGenome uses Archives, and recursively links to 
@@ -32,13 +33,13 @@ IGENOME=${MMU}/${REF}
 
 ## Thus, we create the directory backbone
 echo " Creating directory structure "
-mkdir -p $IGENOME/Annotation/Genes $IGENOME/Annotation/SmallRNA $IGENOME/Annotation/Variation  $IGENOME/Sequence/Chromosomes  $IGENOME/Sequence/WholeGenomeFasta  $IGENOME/Sequence/AbundantSequences $IGENOME/Sequence/BowtieIndex  $IGENOME/Sequence/Bowtie2Index  $IGENOME/Sequence/BWAIndex  $IGENOME/Sequence/Squashed-Mus_musculus-Ensembl-${REF}
+mkdir -p $IGENOME/Annotation/Genes $IGENOME/Annotation/SmallRNA $IGENOME/Annotation/Regulation $IGENOME/Annotation/Variation  $IGENOME/Sequence/Chromosomes  $IGENOME/Sequence/WholeGenomeFasta  $IGENOME/Sequence/AbundantSequences $IGENOME/Sequence/BowtieIndex  $IGENOME/Sequence/Bowtie2Index  $IGENOME/Sequence/BWAIndex  $IGENOME/Sequence/Squashed-Mus_musculus-Ensembl-${REF}
 
 ## download chromosomes from ensembl
 echo " Donwloading individual chromosomes from Ensembl :"
-echo " ftp.ensembl.org/pub/release-75/fasta/mus_musculus/dna/"
+echo " ftp.ensembl.org/pub/release-${RELEASE}/fasta/mus_musculus/dna/"
 cd $IGENOME/Sequence/Chromosomes
-rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/fasta/mus_musculus/dna/*dna.chromosome.*gz .
+rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-${RELEASE}/fasta/mus_musculus/dna/*dna.chromosome.*gz .
 
 ## check if file exists and remove
 if [ -e ChromInfo ]
@@ -48,7 +49,7 @@ fi
 ## create a Chromosome Information file in */Genes
 for gz in $(ls *gz) 
 do  
-    zcat $gz | head | grep -e ">"  | cut -d : -f 4,6 | sed 's/:/\t/' >> ChromInfo
+    gzip -dc $gz | head | grep -e ">"  | cut -d : -f 4,6 | sed "s/:/\t/" >> ChromInfo
 done
 ## for a mac the -V option is not present. Edit in text wrangler
 sort -V ChromInfo > $IGENOME/Annotation/Genes/ChromInfo.txt
@@ -70,18 +71,22 @@ echo "Sequence in FASTA format of Poly C (C repeat 99mer)">> README
 #cp $CURRIG/Sequence/AbundantSequences/* .
 
 echo "Downloading annotation files to Annotation/Genes from Ensembl"
-echo "ftp.ensembl.org/ensembl/pub/release-75/gtf/mus_musculus/"
+ echo "ftp.ensembl.org/ensembl/pub/release-${RELEASE}/gtf/mus_musculus/"
 cd $IGENOME/Annotation/Genes
-rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/gtf/mus_musculus/* .
+rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-${RELEASE}/gtf/mus_musculus/* .
+wget ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M6/gencode.vM6.chr_patch_hapl_scaff.annotation.gtf.gz
+wget ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M6/gencode.vM6.chr_patch_hapl_scaff.annotation.gff3.gz
+wget ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M6/gencode.vM6.long_noncoding_RNAs.gtf.gz
+wget ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M6/gencode.vM6.long_noncoding_RNAs.gff3.gz
+
 echo "Extracting to ${REF}.genes.gtf"
 ## again, does `sort -V` does not work on the mac. copy from linyx
-zcat  Mus_musculus.GRCm38.75.gtf.gz | sort -V > ${REF}.genes.gtf
+gzip -dc  Mus_musculus.GRCm38.${RELEASE}.gtf.gz | sort -V > ${REF}.genes.gtf
 
 ## Download refseq from UCSC (ensGene.txt.gz and .sql) 
 ## Remove leading 'chr' on the chromosome number, and sort by chr and bp
 rsync -avz rsync://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/ensGene* .
-zcat ensGene.txt.gz | sed -e 's/chr//g' | sort -k3V -k4n > ensGene.txt
-
+gzip -dc ensGene.txt.gz | sed -e 's/chr//g' | sort -k3V -k4n > ensGene.txt
 
 ## need to create ref flat
 if [ -e ~/bin/gtfToGenePred ]
@@ -92,21 +97,27 @@ if [ -e ~/bin/gtfToGenePred ]
 fi
 
 echo "Downloading Small RNA and Non-Coding RNA data from :"
-echo "Ensembl : ftp.ensembl.org/pub/release-75/fasta/mus_musculus/ncrna/"
+echo "Ensembl : ftp.ensembl.org/pub/release-${RELEASE}/fasta/mus_musculus/ncrna/"
 echo "miRBase : ftp://mirbase.org/pub/mirbase/CURRENT/"
 cd $IGENOME/Annotation/SmallRNA
-rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/fasta/mus_musculus/ncrna/ .
+rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-${RELEASE}/fasta/mus_musculus/ncrna/ .
 mv README README.ncrna
 wget -nc ftp://mirbase.org/pub/mirbase/CURRENT/*gz 
 wget -nc ftp://mirbase.org/pub/mirbase/CURRENT/README
 
 gunzip -f *.gz
-mv Mus_musculus.GRCm38.75.ncrna.fa ${REF}.ncrna.fa
+mv Mus_musculus.GRCm38.${RELEASE}.ncrna.fa ${REF}.ncrna.fa
+
+echo "Downloading regulation buid"
+echo "Ensembl : ftp.ensembl.org/ensembl/pub/release-${RELEASE}/regulation/mus_musculus/"
+cd $IGENOME/Annotation/Regulation
+rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-${RELEASE}/regulation/mus_musculus/ .
 
 echo "Downloading Annotation/Variation from Ensembl"
-echo "ftp.ensembl.org/pub/release-75/variation/gvf/mus_musculus/"
+echo "ftp.ensembl.org/pub/release-${RELEASE}/variation/gvf/mus_musculus/"
 cd $IGENOME/Annotation/Variation
-rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-75/variation/gvf/mus_musculus/ .
+rsync -avz rsync://ftp.ensembl.org/ensembl/pub/release-${RELEASE}/variation/gvf/mus_musculus/ .
+
 
 echo "Create whole genome fasta file in Sequence/WholeGenomeFasta"
 echo "Using file Annotation/Genes/ChromInfo.txt, as base to order"
@@ -125,7 +136,7 @@ echo " Creating Reference Genome for release $REF"
 for gz in $(cut -f 1 $IGENOME/Annotation/Genes/ChromInfo.txt)
 do
     echo "Appending chromsome : " $gz
-    zcat *chromosome.${gz}.fa.gz | sed 's/dna:chromosome chromosome://'>> $IGENOME/Sequence/WholeGenomeFasta/genome.fa
+    gzip -dc *chromosome.${gz}.fa.gz | sed 's/dna:chromosome chromosome://'>> $IGENOME/Sequence/WholeGenomeFasta/genome.fa
 done
 
 echo "# === Generating genome.fa fasta index === #"
