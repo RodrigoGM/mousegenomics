@@ -1,0 +1,7 @@
+#!/bin/bash 
+#SBATCH --ntasks-per-node=1 --mem-per-cpu=43000 --exclude=k03
+
+echo "R --vanilla -q < $1"
+
+R --vanilla -q < $1
+

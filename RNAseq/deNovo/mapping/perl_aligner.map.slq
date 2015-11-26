@@ -1,0 +1,106 @@
+#!/bin/bash
+# -----------------------<SLURM : START>---------------------------
+# -- run name --
+#SBATCH --job-name=PerlAlign
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="PerlAlign-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+# and "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=16 --mem-per-cpu=4000 --exclusive
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+##SBATCH --array=0-19:1   ## add at comand line
+
+
+# -----------------------</SLURM : END>---------------------------
+
+#<usage>
+## echo "This script expects the directory name and output directory as first,"
+## echo " and second arguments, respectively"
+## echo "Expected Format for Fastq file :  <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
+## echo "and that the fastq for R1/R2 are in the same directory. "
+## Script requires the path/to/fastq as the first argument
+## 
+
+[[ $# -gt 0 ]] || {
+echo "Run as : "
+echo "sbatch --array=0-38 perl_aligner.map.slq /path/to/fastq/ "
+echo "for i in {0..38} ; do sbatch perl_aligner.map.slq /path/to/fastq/ $i ; done "
+echo " DO NOT RUN for loop and --array= on the same command "
+echo "e.g. for i in {0..38} ; do sbatch --array=0-38 perl_aligner.map.slq /path/to/fastq/ $i ; done "
+echo " The array will take precedence over the for loop $i index"
+  exit 1; }
+#</usage>
+
+## Kill script if any commands fail
+set -e -x
+source ../envar.sh
+
+## create array of sequences 
+R1=(`ls $1*R1.fastq.gz`)
+R2=(`ls $1*R2.fastq.gz*`)
+
+SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-$2}
+
+## sample id  management 
+QID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[1]}'`
+LIBRARY=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[2]}'`
+TRT=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[3]}'`
+LIBTYPE=fr-firststrand
+MAPTO=GAL4
+## Creates the output file name for Tophat 
+TOPHDIR=TopHat/${QID}_${LIBRARY}_${TRT}_$MAPTO
+OUTDIR=RSEM/${QID}_${LIBRARY}_${TRT}_$MAPTO
+
+echo ""
+echo " # ======== RUN INFORMATION ======== # "
+
+echo "RUN FOR FILES     ::  " ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]}
+echo "SAMPLE            ::  " $QID $LIBRARY $TRT
+echo "GENOME REFERENCE  ::  " $RSEM_GAL4
+echo "ARRAY             ::  " $SLURM_ARRAY_TASK_ID
+echo "SAVING RESULTS TO ::  " $OUTDIR
+
+echo " # ====== PROCESS START  ====== # "
+echo ""
+
+echo "START PerlAlign     ::  " `date`
+
+## Prepare RSEM reference trancriptome
+## ~/src/trinityrnaseq/util/align_and_estimate_abundance.pl --transcripts $RSEM_GAL4  --est_method RSEM --aln_method bowtie2 --trinity_mode --prep_reference --SS_lib_type FR
+## ~/src/trinityrnaseq/util/align_and_estimate_abundance.pl --transcripts $RSEM_GAL4  --est_method eXpress --aln_method bowtie2 --trinity_mode --prep_reference --SS_lib_type FR
+
+~/src/trinityrnaseq/util/align_and_estimate_abundance.pl --transcripts $RSEM_GAL4 --seqType fq \
+    --left ${R1[$SLURM_ARRAY_TASK_ID]} --right ${R2[$SLURM_ARRAY_TASK_ID]} \
+    --aln_method bowtie2 --include_rsem_bam \
+   --est_method RSEM --trinity_mode --SS_lib_type FR \
+    --thread_count $SLURM_JOB_CPUS_PER_NODE --output_dir $OUTDIR
+
+
+echo "END PerlAlign     ::  " `date`
+echo ""
+echo " # ====== PROCESS END ====== # "
+
+
+
+## Create matrix with gene and isoform counts
+## module load R/3.2.2
+##  ~/src/trinityrnaseq/util/abundance_estimates_to_matrix.pl  --est_method RSEM  --out_prefix=RSEM/${MAPTO}_genes//gene         --name_sample_by_basedir  $(find RSEM/*${MAPTO} -name 'RSEM.genes.results')
+##  ~/src/trinityrnaseq/util/abundance_estimates_to_matrix.pl  --est_method RSEM  --out_prefix=RSEM/${MAPTO}_isoforms//isoform   --name_sample_by_basedir  $(find RSEM/*${MAPTO} -name 'RSEM.isoforms.results')
+
+
+
+

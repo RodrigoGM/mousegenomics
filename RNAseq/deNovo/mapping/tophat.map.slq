@@ -1,0 +1,104 @@
+#!/bin/bash
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=TophatMap
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="TopHat_MAP-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+# and "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=16 --mem-per-cpu=3000
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+##SBATCH --array=0-19:1   ## add at comand line
+
+
+# -----------------------[SLURM : END]---------------------------
+## Require arugment of Fastq folder to continue
+## sbatch --array=0,3,12,15,24,27,35 tophat.map.slq ../fastq/
+## sbatch --array=1-2,4-11,13-14,16-23,25-26,28-34 0,3,12,15,24,27,35 tophat.map.slq ../fastq/
+## for i in ${0..5}; do sbatch tophat.map.slq ../fastq/ $i ; done
+
+[[ $# -gt 1 ]] || {
+echo "sbatch --array=0-<NumLib> tophat.map.slq /path/to/fastq/ "
+echo "for i in {0..38} ; do sbatch tophat.map.slq /path/to/fastq/ $i ; done "
+echo "This script expects the directory name and output directory as first,"
+echo " and second arguments, respectively"
+echo "Expected Format for Fastq file :  <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
+echo "and that the fastq for R1/R2 are in the same directory. "
+  exit 1; }
+
+## Kill script if any commands fail
+set -e
+source ../envar.sh
+
+## create array of sequences 
+R1=(`ls $1*R1.fastq.gz`)
+R2=(`ls $1*R2.fastq.gz*`)
+
+SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-$2}
+
+## sample id  management 
+QID=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[1]}'`
+LIBRARY=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[2]}'`
+TRT=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[3]}'`
+LIBTYPE=fr-firststrand
+
+## Creates the output file name for Tophat 
+OUTDIR=TopHat/${QID}_${LIBRARY}_${TRT}
+
+echo ""
+echo " # ======== RUN INFORMATION ======== # "
+
+echo "RUN FOR FILES     ::  " ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]}
+echo "SAMPLE            ::  " $QID $LIBRARY $TRT
+echo "GENOME REFERENCE  ::  " $BWT2
+echo "ARRAY             ::  " $SLURM_ARRAY_TASK_ID
+echo "SAVING RESULTS TO ::  " $OUTDIR
+
+echo " # ====== PROCESS START  ====== # "
+echo ""
+
+echo "START TOPHAT2     ::  " `date`
+echo "Running tophat for the first time"
+
+tophat2 -o $OUTDIR --library-type $LIBTYPE --num-threads $SLURM_JOB_CPUS_PER_NODE \
+    --rg-id ${QID}_${LIBRARY} --rg-sample $LIBRARY --rg-library $QID \
+    --rg-description "RNAseq for transcript abundance and de-novo transcriptome" \
+    --rg-platform-unit "" --rg-center "GIGA-Genomics" --rg-platform "Illumina" \
+    --rg-date "2015-07-15" \
+   --read-edit-dist 5 --read-mismatches 5 \
+    --b2-very-sensitive $BWT2 ${R1[$SLURM_ARRAY_TASK_ID]} ${R2[$SLURM_ARRAY_TASK_ID]} 
+
+## to resume if fais for "external reasons" i.e. SLURM cancels, comment out previous run.
+## tophat2 --resume $OUTDIR
+
+touch $OUTDIR/tophat.ok
+
+echo "END TOPHAT2       ::  " `date`
+echo ""
+echo "START INDEXING :      " `date`
+
+sambamba index ${OUTDIR}/accepted_hits.bam ${OUTDIR}/accepted_hits.bam.bai
+
+touch $OUTDIR/index.ok
+echo "END INDEXING :        " `date`
+echo ""
+
+echo " # ====== PROCESS END ====== # "
+
+echo " # ====== Submitting cufflinks ===== # "
+echo ""
+sbatch tophat.cuffLNX.slq $OUTDIR/

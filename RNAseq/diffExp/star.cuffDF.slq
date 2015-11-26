@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=CUFF_DF
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="CUFFDIFF-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+# and "days-hours:minutes:seconds"
+
+## ---- Resources ----
+#SBATCH --nodes=1 --ntasks-per-node=16 --mem-per-cpu=4000
+
+# ---- Array Control ----  
+# -- format: 0-7:1 0 through 7 by one
+# --array=0-9:1   ## add at comand line
+
+# -----------------------[SLURM : END]---------------------------
+
+## Kill script if any commands fail
+set -e -x
+source ../envar.sh
+source ~/.bashrc
+
+## merge transcripts from all tissues
+## find */Grcm38.p4/*/2pass -name 'transcripts.gtf' > transcripts.Grcm38.p4.list
+## cuffmerge -o CuffMerge -g $GTF -s $MM10 -p $SLURM_JOB_CPUS_PER_NODE transcripts.Grcm38.p4.list
+
+## Analysis of differential expression using cufflinks
+## data
+
+for tissue in heart liver pituitary embryo placenta 
+
+do
+    
+    B6A15=$(echo $(find */Grcm38.p4/*/2pass -name 'abundances.cxb' | grep $tissue.*15BC1) | sed 's/ /,/')
+    B6A17=$(echo $(find */Grcm38.p4/*/2pass -name 'abundances.cxb' | grep $tissue.*17BC1) | sed 's/ /,/')
+    B6A19=$(echo $(find */Grcm38.p4/*/2pass -name 'abundances.cxb' | grep $tissue.*19BC1) | sed 's/ /,/')
+    B6AX=$(echo $(find */Grcm38.p4/*/2pass -name 'abundances.cxb' | grep $tissue.*XF1) | sed 's/ /,/')
+    B6C=$(echo $(find */Grcm38.p4/*/2pass -name 'abundances.cxb' | grep $tissue.*CTRL) | sed 's/ /,/')
+    
+    SAMPLES="$B6A15 $B6A17 $B6A19 $B6AX $B6C"
+    
+    CDOUT=${tissue}/Grcm38.p4/CuffDiff
+    
+    if [ -f ${CDOUT} ]; then echo "output may overwrite previous results in directory : ${CDOUT}"; else mkdir -p ${CDOUT}/Gencode $CDOUT/Merged  && echo "directory created : ${CDOOUT} "; fi
+    
+##    cuffdiff -o ${CDOUT}/Merged --frag-bias-correct $MM10 -p $SLURM_JOB_CPUS_PER_NODE --labels B6A15,B6A17,B6A19,B6AX,B6C --library-type ${LIBTYPE} --multi-read-correct CuffMerge/merged.gtf ${SAMPLES}
+
+    cuffdiff -o ${CDOUT}/Gencode --frag-bias-correct $MM10 -p $SLURM_JOB_CPUS_PER_NODE --labels B6A15,B6A17,B6A19,B6AX,B6C --library-type ${LIBTYPE} --multi-read-correct $GTF ${SAMPLES}
+    
+done

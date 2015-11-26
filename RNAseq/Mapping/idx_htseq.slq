@@ -6,35 +6,58 @@
 
 #  -- email preferences --
 #SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #     (ALL = BEGIN, END, FAIL, REQUEUE)
 
 # -- output prefex
-#SBATCH --output="IDX+COUNT-%j.out"
+#SBATCH --output="count-%j.out"
+##SBATCH --output="ex_count-%j.out"
+
+#  By default both standard output and  standard  error are 
+# directed to a file of the name "slurm-%j.out", where the "%j" 
+# is replaced with the job allocation number.   The filename 
+# pattern may contain one or more replacement symbols, which are 
+# a percent sign "%" followed by a letter (e.g. %j).
+# Supported replacement symbols are:
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
 
 # -- time requierements --
-#SBATCH --time=16:30:00
+#SBATCH --time=06:30:00
+# Acceptable time formats include "minutes", "minutes:seconds", 
+# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
 # and "days-hours:minutes:seconds"
+# ** Note that the lower the requested run-time, the higher the
+#    chances to get scheduled to 'fill in the gaps' between other
+#    jobs. 
 
 # ---- Resources ----
 #SBATCH --ntasks-per-node=1 --mem-per-cpu=2000
 
 # ---- Array Control ----  
 # -- format: 0-7:1 0 through 7 by one
+#
+
 
 # -----------------------[SLURM : END]---------------------------
 ## Require arugment of Fastq folder to continue
 
+
 ## Kill script if any commands fail
-#set -e  ## use a `#` to deactivate
+#set -e -x
 
 ## path to genome assembly and annotation files
-source $( find ../ -name 'envar.sh' )
-
-OUTDIR=$1
+MMU=$7
+MM10=$1
+BWT2=$2
+GTF=$3
+REFFLAT=$4
+OUTDIR=$5
+LIBTYPE=$6
+GFF=$8
 
 echo " # ======== RUN INFORMATION ======== # "
 
@@ -53,15 +76,16 @@ echo " # ====== PROCESS START  ====== # "
 echo "START INDEXING :      " `date`
 
 samtools index ${OUTDIR}/accepted_hits.bam
+
 #samtools index ${OUTDIR}/accepted_hits.sort.bam
 #samtools index ${OUTDIR}/accepted_hits.nsort.bam
 
 echo "END INDEXING :        " `date`
 echo "START RNASeq Metrics: " `date`
 
-## RNA metrics w/ picard
-#java -Xmx2G -jar ~/programs/picard-tools-1.107/CollectRnaSeqMetrics.jar \
-#    REF_FLAT=${REFFLAT}\
+# echo RNA metrics w/ picard
+#java -Xmx2G -jar ~/programs/picard-tools/CollectRnaSeqMetrics.jar \
+#    REF_FLAT=${REFFLAT} \
 #    STRAND=FIRST_READ_TRANSCRIPTION_STRAND \
 #    CHART_OUTPUT=${OUTDIR}/coverage.pdf \
 #    INPUT=${OUTDIR}/accepted_hits.bam \
@@ -80,5 +104,7 @@ samtools view ${OUTDIR}/accepted_hits.nsort.bam | htseq-count -m intersection-st
     -s 'reverse' - ${GTF} > ${OUTDIR}/gene.htseq.txt
 
 echo "END htseq-count    :   " `date`
+
+
 
 echo " # ====== POCESS END ====== # "

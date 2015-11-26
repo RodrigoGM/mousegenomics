@@ -13,23 +13,22 @@
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
-
 # -- time requierements --
-#SBATCH --time=06:30:00
+#SBATCH --time=48:00:00
 # "days-hours:minutes:seconds"
 
 # ---- Resources ----
-#SBATCH --ntasks-per-node=1 --mem-per-cpu=2000
+#SBATCH --ntasks-per-node=2 --mem-per-cpu=4000
 
 # ---- Array Control ----  
 # -- format: 0-7:1 0 through 7 by one
 
 # -----------------------[SLURM : END]---------------------------
-
 ## Require arugment of Fastq folder to continue
 ## Kill script if any commands fail
-#set -e
-source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
+set -e -x
+source ~/.bashrc
+source ../envar.sh
 
 # inherits OUTDIR
 OUTDIR=$1
@@ -43,7 +42,7 @@ echo "GTF passed is           : " $GTF
 echo "RefFlat passed is       : " $REFFLAT
 echo "GFF passed is           : " $GFF
 
-echo "FILE ANALYZED           : " $(ls ${OUTDIR}/*nsort*)
+echo "FILE ANALYZED           : " $(ls ${OUTDIR}/*.sort.bam)
 echo "SAVING RESULTS TO       : " $OUTDIR
 echo "--lib-type passed is    : " $LIBTYPE
 
@@ -51,20 +50,15 @@ echo " # ====== PROCESS START  ====== # "
 
 echo "START htseq-count :    " `date`
 
-samtools view ${OUTDIR}/Aligned.out.nsort.bam | htseq-count -m intersection-strict -s 'reverse' - ${GTF} > ${OUTDIR}/star.gene.htseq.txt
+htseq-count -f 'bam' -r 'pos' -s 'reverse' -m intersection-strict $OUTDIR/Aligned.out.sort.bam $GTF > $OUTDIR/star.gene.htseq.txt
+
+touch $OUTDIR/star.gene.htseq.txt.ok
+
+htseq-count -f 'bam' -r 'pos' -s 'reverse' -m union $OUTDIR/Aligned.out.sort.bam $GTF > $OUTDIR/star.gene.htseq.union.txt
+
+touch $OUTDIR/star.gene.htseq.union.txt.ok
 
 echo "END htseq-count    :   " `date`
 
 
-echo " # ====== POCESS END ====== # "
-
-## can't get picard's CollectRnaMetrix.jar to work properly
-#echo "START RNASeq Metrics: " `date`
-#java -Xmx2G -jar ~/programs/picard-tools/CollectRnaSeqMetrics.jar \
-#    REF_FLAT=${REFFLAT} \
-#    STRAND=FIRST_READ_TRANSCRIPTION_STRAND \
-#    CHART_OUTPUT=${OUTDIR}/star.coverage.pdf \
-#    INPUT=${OUTDIR}/Aligned.out.sort.bam \
-#    OUTPUT=${OUTDIR}/rnastar.metrix.txt \
-#    REFERENCE_SEQUENCE=${MM10}
-#echo "END RNASEQ Metrics :   " `date`
+echo " # ====== PROCESS END ====== # "

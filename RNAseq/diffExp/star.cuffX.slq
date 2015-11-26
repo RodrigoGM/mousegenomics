@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# -----------------------[SLURM : START]---------------------------
+# -- run name --
+#SBATCH --job-name=CUFF_L+Q
+
+#  -- email preferences --
+#SBATCH --mail-user=rodrigo.gularte@ulg.ac.be
+#SBATCH --mail-type=FAIL
+#     (ALL = BEGIN, END, FAIL, REQUEUE)
+
+# -- output prefex
+#SBATCH --output="CUFF_LQ-%j.out"
+#     %j     Job allocation number.
+#     %N     Main node name.  
+
+# -- time requierements --
+#SBATCH --time=48:00:00
+#  "days-hours:minutes:seconds"
+
+# ---- Resources ----
+#SBATCH --ntasks-per-node=16 --mem-per-cpu=2000
+
+# -----------------------[SLURM : END]---------------------------
+
+## Kill script if any commands fail
+set -e -x
+source ../envar.sh
+
+# inherits OUTDIR
+OUTDIR=$1
+
+echo " # ======== RUN INFORMATION ======== # "
+
+echo "Genome Release is       : " $MMU
+echo "Reference Sequence is   : " $MM10
+echo "Bowtie2 index passed is : " $BWT2
+echo "GTF passed is           : " $GTF
+echo "RefFlat passed is       : " $REFFLAT
+echo "GFF passed is           : " $GFF
+
+echo "FILE ANALYZED           : " $(ls $OUTDIR/Aligned.out.sort.bam)
+echo "SAVING RESULTS TO       : " $OUTDIR
+echo "--lib-type passed is    : " $LIBTYPE
+
+echo " # ====== PROCESS START  ====== # "
+
+echo "START CUFFLINKS   ::  " `date`
+
+cufflinks -o $OUTDIR/ -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --GTF $GTF --library-type $LIBTYPE $OUTDIR/Aligned.out.sort.bam
+
+touch $OUTDIR/cufflinks.ok
+
+echo "END CUFFLINKS     ::  " `date`
+echo ""
+echo "START CUFFQUANT   ::  " `date`
+
+cuffquant -o $OUTDIR/ -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --library-type $LIBTYPE $GTF $OUTDIR/Aligned.out.sort.bam
+
+touch $OUTDIR/cuffquant.ok
+
+echo "END CUFFQUANT   ::  " `date`
+echo " # ====== PROCESS END ====== # "
+

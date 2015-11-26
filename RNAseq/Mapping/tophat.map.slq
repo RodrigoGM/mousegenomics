@@ -12,16 +12,29 @@
 #     (ALL = BEGIN, END, FAIL, REQUEUE)
 
 # -- output prefex
-#SBATCH --output="TopHat_MAP-%j.out"
+#SBATCH --output="assembl-%j.out"
+
+#  By default both standard output and  standard  error are 
+# directed to a file of the name "slurm-%j.out", where the "%j" 
+# is replaced with the job allocation number.   The filename 
+# pattern may contain one or more replacement symbols, which are 
+# a percent sign "%" followed by a letter (e.g. %j).
+# Supported replacement symbols are:
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
+
 # -- time requierements --
 #SBATCH --time=24:00:00
+# Acceptable time formats include "minutes", "minutes:seconds", 
+# "hours:minutes:seconds", "days-hours", "days-hours:minutes" 
 # and "days-hours:minutes:seconds"
+# ** Note that the lower the requested run-time, the higher the
+#    chances to get scheduled to 'fill in the gaps' between other
+#    jobs. 
 
 # ---- Resources ----
-#SBATCH --ntasks-per-node=12 --mem-per-cpu=2000
+#SBATCH --ntasks-per-node=16 --mem-per-cpu=2000
 
 # ---- Array Control ----  
 # -- format: 0-7:1 0 through 7 by one
@@ -30,24 +43,33 @@
 
 # -----------------------[SLURM : END]---------------------------
 ## Require arugment of Fastq folder to continue
+## echo "sbatch --array=0-<NumLib> tophat.map.slq /path/to/fastq/ /path/to/output/"
+## echo "This script expects the directory name and output directory as first,"
+## echo " and second arguments, respectively"
+## echo "Fastq files are standard from Illumina <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
+## echo "and that the fastq for R1/R2 are in the same directory. "
+## echo "It also expects that the --library-type argument for running tophat "
+## echo "and cufflinks is specified in the second argument."
+## echo "Valid library types are : ";
+## echo "fr-unstranded, fr-firststrand, fr-secondstrand"
 
 [[ $# -gt 0 ]] || {
-echo "sbatch --array=0-<NumLib> tophat.map.slq /path/to/fastq/ /path/to/output/"
-echo "This script expects the directory name and output directory as first,"
-echo " and second arguments, respectively"
-echo "Expected Format for Fastq file :  <SampleID>_<LibraryID/Index_LANE_...fastq.gz>"
-echo "and that the fastq for R1/R2 are in the same directory. "
+
   exit 1; }
 
 ## Kill script if any commands fail
-set -e
-source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
+set -e -x
 
+source ../envar.sh
+
+## make a list of all your fastq.gz files in one 
 ## create array of sequences 
-R1=(`ls $1*R1*`)
-R2=(`ls $1*R2*`)
 
-SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID:-$2}
+R1=(`ls $1*R1*gz`)
+R2=(`ls $1*R2*gz`)
+
+
+## echo "EXPERIMENT FILES :: ${R1[@]}"
 
 ## sample id  management 
 NAME=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[n],brra,"_"); print brra[1]}'`
@@ -56,7 +78,7 @@ POOL=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n=split($0,arra,"/"); split(arra[
 TISSUE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{n = split($0, arra, "/"); split(arra[n], brra, "_"); print brra[3];}' | awk '{n = split($0, arra, "-"); print arra[1];}'`
 LANE=`echo ${R1[$SLURM_ARRAY_TASK_ID]} | awk '{split($1,BARR,"_"); for (x in BARR) if (index(BARR[x],"L0") == 1){ print BARR[x]};}'`
 
-## Creates the output file name for Tophat 
+## provide output directory
 OUTDIR=${2}${STRAIN}_${POOL}_${LIBTYPE}_${LANE}
 
 echo " # ======== RUN INFORMATION ======== # "
@@ -89,18 +111,11 @@ echo "END TOPHAT2       ::  " `date`
 
 
 echo "START SORTING     ::  " `date`
-# sorts by name `-n` to use with htseq-count
-# and sorts by position to run with other applications
+
 samtools sort -n -@ $SLURM_JOB_CPUS_PER_NODE ${OUTDIR}/accepted_hits.bam ${OUTDIR}/accepted_hits.nsort
-samtools sort -@ $SLURM_JOB_CPUS_PER_NODE ${OUTDIR}/accepted_hits.bam ${OUTDIR}/accepted_hits.sort
+## samtools sort -@ $SLURM_JOB_CPUS_PER_NODE ${OUTDIR}/accepted_hits.bam ${OUTDIR}/accepted_hits.sort
 
 echo "END SORTING       ::  " `date`
-echo "START CUFFLINKS   ::  " `date`
-## runs cufflings with frag bias correction, and the Ensembl Genes 75 ($GTF in envar.sh)
-cufflinks -o ${OUTDIR} -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --GTF ${GTF} --library-type ${LIBTYPE} ${OUTDIR}/accepted_hits.bam
-
-echo "END CUFFLINKS     ::  " `date`
-echo " # ====== POCESS END ====== # "
 
 echo " # === submitting index and counting ===# "
 
@@ -113,4 +128,21 @@ echo " # === submitting index and counting ===# "
 ##                       $1      $2     $3         $4        $5         $6    $7    $8
 
 sbatch idx_htseq.slq ${MM10} ${BWT2} ${GTF} ${REFFLAT} ${OUTDIR} ${LIBTYPE} ${MMU} ${GFF} 
+
+
+
+echo "START CUFFLINKS   ::  " `date`
+# running cufflinks 
+cufflinks -o ${OUTDIR} -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --GTF ${GTF} --library-type ${LIBTYPE} ${OUTDIR}/accepted_hits.bam
+
+echo "END CUFFLINKS     ::  " `date`
+echo "START CUFFQUANT   ::  " `date`
+
+cuffquant -o ${OUTDIR}/ -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --library-type ${LIBTYPE} $GTF ${OUTDIR}/accepted_hits.bam
+
+
+echo "END CUFFQUANT   ::  " `date`
+
+
+echo " # ====== POCESS END ====== # "
 

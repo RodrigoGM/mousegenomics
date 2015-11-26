@@ -14,9 +14,8 @@
 #     %j     Job allocation number.
 #     %N     Main node name.  
 
-
 # -- time requierements --
-#SBATCH --time=72:00:00
+#SBATCH --time=48:00:00
 # "days-hours:minutes:seconds"
 
 # ---- Resources ----
@@ -26,47 +25,41 @@
 # -- format: 0-7:1 0 through 7 by one
 ##SBATCH --array=0-19   ## add at comand line
 
-
 # -----------------------[SLURM : END]---------------------------
+
 ## Require arugment of Fastq folder to continue
 ## Kill script if any commands fail
-#set -e
-source $(find $GLOBALSCRATCH/tgv -name 'envar.sh' -type f)
+set -e
+source ../envar.sh
 
 # inherits OUTDIR
-OUTDIR=$1
+OUTDIR=$1/
+LIBTYPE=fr-firststrand
 
 echo " # ======== RUN INFORMATION ======== # "
 
-echo "Genome Release is       : " $MMU
-echo "Reference Sequence is   : " $MM10
-echo "Bowtie2 index passed is : " $BWT2
+echo "Bowtie2 index passed is : " $BWT2tx
 echo "GTF passed is           : " $GTF
+
 echo "RefFlat passed is       : " $REFFLAT
 echo "GFF passed is           : " $GFF
 
-echo "FILE ANALYZED           : " $(ls ${OUTDIR}/Aligned.out.sort.bam)
+echo "FILE ANALYZED           : " $(ls $OUTDIR/accepted_hits.bam)
 echo "SAVING RESULTS TO       : " $OUTDIR
 echo "--lib-type passed is    : " $LIBTYPE
+echo ""
+echo ""
 
 echo " # ====== PROCESS START  ====== # "
 
-echo "START INDEXING :      " `date`
+#echo "START CUFFLINKS   ::  " `date`
 
-sambamba index ${OUTDIR}/Aligned.out.sort.bam
+#cufflinks -o ${OUTDIR}/ -b $BWT2tx.fa -u -p $SLURM_JOB_CPUS_PER_NODE --library-type ${LIBTYPE} ${OUTDIR}/accepted_hits.bam
 
-echo "END INDEXING :        " `date`
-echo "START CUFFLINKS   ::  " `date`
-
-cufflinks -o ${OUTDIR} -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --GTF ${GTF} --library-type ${LIBTYPE} ${OUTDIR}/Aligned.out.sort.bam
-
-echo "END CUFFLINKS     ::  " `date`
+#echo "END CUFFLINKS     ::  " `date`
 echo "START CUFFQUANT   ::  " `date`
 
-cuffquant -o ${OUTDIR}/ -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --library-type ${LIBTYPE} $GTF ${OUTDIR}/Aligned.out.sort.bam
+cuffquant -o ${OUTDIR}/ -b $BWT2tx.fa -u -p $SLURM_JOB_CPUS_PER_NODE --library-type ${LIBTYPE} ${OUTDIR}/transcripts.gtf ${OUTDIR}/accepted_hits.bam
 
 echo "END CUFFQUANT   ::  " `date`
-echo " # ====== POCESS END ====== # "
-
-## Process CANCELD DUE TO TIME LIMIT files :
-## cuffquant -o pituitary/19BC1_pit-E_L001/ -b $MM10 -u -p $SLURM_JOB_CPUS_PER_NODE --library-type ${LIBTYPE} $GTF pituitary/19BC1_pit-E_L001/Aligned.out.sort.bam
+echo " # ====== PROCESS END ====== # "
