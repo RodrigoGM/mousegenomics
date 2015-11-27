@@ -28,7 +28,6 @@ TrinotateDB.setup.sh : Script to import all the annotation and differential expr
 
 diffExp/
 ---
-corsetDE.slq
 
 ebseq.slq : launch script for R scripts
 
@@ -39,9 +38,6 @@ ebseq.SexTRT.Rg.R : runs EBSeq on four comparisons
 
 edgeR.DE.sh : runs the edgeR differential expression script from trinity at the "gene" and "transcript" levels.
 
-
-citations
----
 
 
 
