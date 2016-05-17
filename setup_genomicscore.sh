@@ -74,6 +74,8 @@ echo "downloading vcftools"
 [[ -x vcftools ]] || git clone https://github.com/vcftools/vcftools.git
 cd vcftools
 git pull origin master
+./autogen.sh
+./configure
 make
 cd ../
 
