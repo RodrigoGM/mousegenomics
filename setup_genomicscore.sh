@@ -35,7 +35,7 @@ echo "downloading htslib"
 [[ -x htslib ]] || git clone https://github.com/samtools/htslib.git
 cd htslib
 git pull origin master 
-git checkout tags/1.2.1
+git checkout tags/1.3.2
 make
 cd ../
 
@@ -43,7 +43,7 @@ echo "downloading samtools"
 [[ -x samtools ]] || git clone https://github.com/samtools/samtools.git
 cd samtools
 git pull origin master
-git checkout tags/1.2
+git checkout tags/1.3.1
 make
 cd ../
 
@@ -51,7 +51,7 @@ echo "downloading bcftools"
 [[ -x bcftools ]] || git clone https://github.com/samtools/bcftools.git
 cd bcftools
 git pull origin master
-git checkout tags/1.2
+git checkout tags/1.3.1
 make
 cd ../
 
@@ -59,14 +59,14 @@ echo "downloading bedtools2"
 [[ -x bedtools2 ]] || git clone https://github.com/arq5x/bedtools2.git
 cd bedtools2
 git pull origin master
-git checkout tags/v2.24.0
+git checkout tags/v2.26.0
 make
 cd ../
 
 echo "downloading bwa"
 [[ -x bwa ]] || git clone https://github.com/lh3/bwa.git
 cd bwa
-git checkout tags/0.7.7
+git checkout tags/0.7.15
 make
 cd ../
 
@@ -80,17 +80,20 @@ make
 cd ../
 
 echo "downloading bowtie-1"
-wget -O bowtie.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie/1.0.0/bowtie-1.0.0-linux-x86_64.zip/download
+#wget -O https://sourceforge.net/projects/bowtie-bio/files/bowtie/1.1.2/bowtie-1.1.2-linux-x86_64.zip/download
+wget -O bowtie.zip https://sourceforge.net/projects/bowtie-bio/files/bowtie/1.1.2/bowtie-1.1.2-linux-x86_64.zip/download
 unzip bowtie.zip
 rm bowtie.zip
 
 echo "downloading bowtie2"
-wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.5/bowtie2-2.2.5-linux-x86_64.zip/download
+#wget -O bowtie2.zip http://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.5/bowtie2-2.2.5-linux-x86_64.zip/download
+wget -O bowtie2.zip https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.9/bowtie2-2.2.9-linux-x86_64.zip/download
 unzip bowtie2.zip
 rm bowtie2.zip
 
 echo "downloading tophat2"
-wget -O tophat2.tar.gz http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.14.Linux_x86_64.tar.gz
+#wget -O tophat2.tar.gz http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.14.Linux_x86_64.tar.gz
+wget -O tophat2.tar.gz http://ccb.jhu.edu/software/tophat/downloads/tophat-2.1.1.Linux_x86_64.tar.gz
 tar xvf tophat2.tar.gz
 rm tophat2.tar.gz
 
@@ -136,9 +139,11 @@ unzip fastqc.tar.gz
 rm fastqc.tar.gz
 
 echo "downloading picard-tools"
-wget -O picard-tools.zip http://sourceforge.net/projects/picard/files/picard-tools/1.119/picard-tools-1.119.zip/download
-unzip picard-tools.zip
-rm picard-tools.zip
+#wget -O picard-tools.zip http://sourceforge.net/projects/picard/files/picard-tools/1.119/picard-tools-1.119.zip/download
+# git clone https://github.com/broadinstitute/picard.git
+wget https://github.com/broadinstitute/picard/releases/download/2.7.1/picard.jar
+#unzip picard-tools.zip
+#rm picard-tools.zip
 # cd picard-tools-1.119
 
 echo "downloading ensembl-tools"
